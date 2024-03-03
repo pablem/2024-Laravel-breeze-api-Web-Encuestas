@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("CREATE TYPE user_role AS ENUM ('admin', 'editor', 'publicador')");
+        // DB::statement("CREATE TYPE user_role AS ENUM ('admin', 'editor', 'publicador')");
 
         Schema::create('users', function (Blueprint $table) {
             $table->id();
@@ -33,7 +33,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("DROP TYPE IF EXISTS user_role CASCADE");
+        // DB::statement("DROP TYPE IF EXISTS user_role CASCADE");
         Schema::dropIfExists('users');
     }
 };

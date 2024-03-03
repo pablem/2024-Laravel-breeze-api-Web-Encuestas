@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('respuestas', function (Blueprint $table) {
             $table->id();
+            $table->unsignedInteger('encuestado_id');
+            $table->unsignedInteger('encuesta_id');
+            $table->string('tipo_respuesta');
+            $table->unsignedTinyInteger('puntuacion')->nullable();
+            $table->text('entrada_texto')->nullable();
+            $table->json('seleccion')->nullable();
             $table->timestamps();
         });
     }

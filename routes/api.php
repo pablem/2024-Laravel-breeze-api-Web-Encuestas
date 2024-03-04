@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\EncuestaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+use function Pest\Laravel\get;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +20,5 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/encuestas', [EncuestaController::class, 'index']);

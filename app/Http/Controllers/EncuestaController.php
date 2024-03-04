@@ -12,7 +12,11 @@ class EncuestaController extends Controller
      */
     public function index()
     {
-        //
+        // return response()->json(Encuesta::all(),200); 
+        return response()->json([
+            'message' => 'es una prueba', 
+            'success' => true,
+            ], 200);
     }
 
     /**

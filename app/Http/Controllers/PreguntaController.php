@@ -16,7 +16,6 @@ class PreguntaController extends Controller
      * 
      * @param  int  $encuestaId
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function store(Request $request, $encuestaId)
     {
@@ -28,9 +27,10 @@ class PreguntaController extends Controller
             foreach ($request->json() as $preguntaData) {
 
                 $validator = Validator::make($preguntaData, [
-                        '*.id' => 'integer',
                         'titulo_pregunta' => 'required|string',
                         'tipo_pregunta' => 'required|string',
+                        'seleccion' => 'nullable|array', //error al recibir arrays vacíos [] (no es problema de vadilación)
+                        'rango_puntuacion' => 'nullable|array',
                         // '*.opciones' => ['array', 'required_if:*.tipo_pregunta,3'], // Opcionalmente requerido solo si el tipo es "multiple choice"
                     ]);
                 if ($validator->fails()) {

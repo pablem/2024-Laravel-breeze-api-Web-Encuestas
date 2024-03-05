@@ -15,7 +15,6 @@ class EncuestaController extends Controller
     {
         $encuestas = Encuesta::orderBy('created_at', 'desc')->get();
         return response()->json($encuestas,200); 
-        // return response()->json([$encuestas],200); //duda si van los corchetes [] 
     }
 
     /**
@@ -45,8 +44,13 @@ class EncuestaController extends Controller
         // if ($validator->fails()) {
         //     return response()->json(['error' => $validator->errors()], 400);
         // }
-        $encuesta = Encuesta::create($request->all());
-        return response()->json($encuesta, 201); 
+        try {
+            $encuesta = Encuesta::create($request->all());
+            return response()->json($encuesta, 201); 
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th], 500); 
+
+        }
     }
 
     /**

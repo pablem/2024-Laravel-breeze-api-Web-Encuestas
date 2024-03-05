@@ -26,13 +26,13 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 Route::get('/encuestas', [EncuestaController::class, 'index']);
 Route::post('/encuestas',[EncuestaController::class, 'store']);
-Route::put('/encuestas/{encuestaId}/edit',[EncuestaController::class, 'edit']);
+Route::get('/encuestas/{encuestaId}/edit',[EncuestaController::class, 'edit']);
 Route::put('/encuestas/{encuestaId}',[EncuestaController::class, 'update']);
 Route::delete('/encuestas/{encuestaId}',[EncuestaController::class, 'destroy']);
 
-Route::post('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'store']); //a probar
-Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']); //a probar
+Route::post('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'store']);
+Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']);
 Route::delete('/preguntas/{preguntaId}',[PreguntaController::class, 'destroy']);
 
-// Route::get('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'edit']); //a probar
+// Route::get('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'edit']);
 

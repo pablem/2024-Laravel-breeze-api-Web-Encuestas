@@ -1,0 +1,7 @@
+1- hacer index de tablas desde migraciones 
+2- control confirme contraseña
+3- agregar rol o tipo de usuario desde el front y validación de rol en controlador
+4- recuperar estado de sesión y datos usuario, usar hook useSWR o seguir el tutorial de yt front
+    4.1 -> se produce un error al registrar un nuevo usuario, cambia la sesión, ese cambio no se ve reflejado en el front
+    4.2 -> leer sobre validaciòn en laravel y el método csrf 
+5-  

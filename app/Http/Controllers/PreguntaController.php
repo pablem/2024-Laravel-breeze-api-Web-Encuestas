@@ -2,64 +2,125 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Encuesta;
 use App\Models\Pregunta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class PreguntaController extends Controller
 {
+   
     /**
-     * Display a listing of the resource.
+     * Actualiza y a la vez almacena nuevas preguntas de una encuesta dada
+     * 
+     * @param  int  $encuestaId
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function store(Request $request, $encuestaId)
     {
-        //
+        // $encuestaId = 1;
+        try {
+            // Iniciar una transacción ya que estamos trabajando con múltiples consultas
+            DB::beginTransaction();
+
+            foreach ($request->json() as $preguntaData) {
+
+                $validator = Validator::make($preguntaData, [
+                        '*.id' => 'integer',
+                        'titulo_pregunta' => 'required|string',
+                        'tipo_pregunta' => 'required|string',
+                        // '*.opciones' => ['array', 'required_if:*.tipo_pregunta,3'], // Opcionalmente requerido solo si el tipo es "multiple choice"
+                    ]);
+                if ($validator->fails()) {
+                    return response()->json(['error' => $validator->errors()], 400);
+                }
+                if (isset($preguntaData['id'])) {
+                // se asume que las preguntas nuevas no tendrán un ID asignado, si tiene, se actualizan
+                    Pregunta::where('id', $preguntaData['id'])
+                        ->update([
+                            'titulo_pregunta' => $preguntaData['titulo_pregunta'],
+                            'tipo_pregunta' => $preguntaData['tipo_pregunta'],
+                            'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
+                            'seleccion' => $preguntaData['seleccion'] ?? null,
+                        ]);
+                } else {
+                    $pregunta = new Pregunta([
+                        'encuesta_id' => $encuestaId,
+                        'titulo_pregunta' => $preguntaData['titulo_pregunta'],
+                        'tipo_pregunta' => $preguntaData['tipo_pregunta'],
+                        'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
+                        'seleccion' => $preguntaData['seleccion'] ?? null,
+                    ]);
+                    $pregunta->save();
+                }
+            }
+            // Confirmar la transacción si todo ha ido bien
+            DB::commit();
+
+            return response()->json(['message' => 'Se guardaron las preguntas'], 201);
+
+        } catch (\Exception $e) {
+            // Deshacer la transacción en caso de error
+            DB::rollBack();
+
+            return response()->json(['error' => $e], 500);
+        }
+    }
+    
+    /**
+     * Mostrar todas las preguntas de una encuesta (Vista del encuestado / o  Vista del editor de encuestas?) 
+     * (Formulario para Respuesta@create )
+     *
+     * @param  int  $encuestaId
+     * @return \Illuminate\Http\Response
+     */
+    public function getPreguntas($encuestaId)
+    {
+        $encuesta = Encuesta::find($encuestaId);
+        if (!$encuesta) {
+            return response()->json(['error' => 'Encuesta no encontrada'], 404);
+        }
+
+        $preguntas = Pregunta::where('encuesta_id', $encuestaId)->orderBy('id')->get();
+
+        return response()->json($preguntas, 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Pregunta $pregunta)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Pregunta $pregunta)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Pregunta $pregunta)
-    {
-        //
-    }
+    // /**
+    //  * Formulario para editar una pregunta 
+    //  *
+    //  * @param  int  $id
+    //  * @return \Illuminate\Http\Response
+    //  */
+    // public function edit($id)
+    // {
+    // }
 
     /**
      * Remove the specified resource from storage.
+     *
+     * @param  int  $preguntaId
+     * @return \Illuminate\Http\Response
      */
-    public function destroy(Pregunta $pregunta)
+    public function destroy($preguntaId)
     {
-        //
+        try {
+            $pregunta = Pregunta::findOrFail($preguntaId);
+            if (!$pregunta) {
+                return response()->json(['error' => 'Pregunta no encontrada'], 404);
+            }
+            // Obtener el ID de la encuesta antes de eliminar la pregunta
+            $encuestaId = $pregunta->encuesta_id;
+            // Eliminar la pregunta
+            $pregunta->delete();
+            return response()->json(['message' => 'Pregunta eliminada con éxito', 'encuestaId' => $encuestaId], 200);
+            // Redirigir a la lista actualizada de preguntas correspondientes a la encuesta
+            // session(['encuestaId' => $encuestaId]);
+            } 
+        catch (\Exception $e) {
+            return response()->json(['error' => $e], 500);
+        }
     }
 }

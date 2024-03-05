@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Encuesta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class EncuestaController extends Controller
 {
@@ -12,11 +13,9 @@ class EncuestaController extends Controller
      */
     public function index()
     {
-        // return response()->json(Encuesta::all(),200); 
-        return response()->json([
-            'message' => 'es una prueba', 
-            'success' => true,
-            ], 200);
+        $encuestas = Encuesta::orderBy('created_at', 'desc')->get();
+        return response()->json($encuestas,200); 
+        // return response()->json([$encuestas],200); //duda si van los corchetes [] 
     }
 
     /**
@@ -24,7 +23,15 @@ class EncuestaController extends Controller
      */
     public function create()
     {
-        //
+        // frontend
+    }
+
+    public function createAndStore()
+    {
+        $encuesta = new Encuesta();
+        $encuesta->save();
+        //Hace falta un objeto json de preguntas vacío?
+        return response()->json([], 204);
     }
 
     /**
@@ -32,7 +39,14 @@ class EncuestaController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // $validator = Validator::make($request->all(), [
+        //      'titulo_encuesta' => 'required|string|max:40',
+        // ]);
+        // if ($validator->fails()) {
+        //     return response()->json(['error' => $validator->errors()], 400);
+        // }
+        $encuesta = Encuesta::create($request->all());
+        return response()->json($encuesta, 201); 
     }
 
     /**
@@ -40,30 +54,59 @@ class EncuestaController extends Controller
      */
     public function show(Encuesta $encuesta)
     {
-        //
+        // sin uso 
     }
 
     /**
      * Show the form for editing the specified resource.
+     * @param  int  $encuestaId
+     * 
      */
-    public function edit(Encuesta $encuesta)
+    public function edit($encuestaId)
     {
-        //
+        $encuesta = Encuesta::find($encuestaId);
+        if (is_null($encuesta)) {
+            return response()->json(['error' => 'Encuesta no encontrada'], 404);
+        }
+        return response()->json($encuesta,200); 
     }
 
     /**
      * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $encuestaId
+     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Encuesta $encuesta)
+    public function update(Request $request, $encuestaId)
     {
-        //
+        $encuesta = Encuesta::find($encuestaId);
+        if (!$encuesta) {
+            return response()->json(['error' => 'Encuesta no encontrada'], 404);
+        }
+        $validator = Validator::make($request->all(), [
+            'titulo_encuesta' => 'required|string|max:40',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+        $encuesta->update($request->all());
+        return response()->json($encuesta, 200);
     }
 
     /**
      * Remove the specified resource from storage.
+     *
+     * @param  int  $encuestaId
+     * @return \Illuminate\Http\Response
      */
-    public function destroy(Encuesta $encuesta)
+    public function destroy($encuestaId)
     {
-        //
+        $encuesta = Encuesta::find($encuestaId);
+        if (!$encuesta) {
+            return response()->json(['error' => 'Encuesta no encontrada'], 404);
+        }
+        $encuesta->delete();
+        return response()->json(['message' => 'Encuesta eliminada con éxito'], 200);
     }
 }

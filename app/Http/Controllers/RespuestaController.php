@@ -21,26 +21,26 @@ class RespuestaController extends Controller
     public function store(Request $request, $encuestaId)
     {
         // Validación del campo "correo" + combinación única corre&encuesta_id
-        // $emailValidator = Validator::make($request->all(), [
-        //     'correo' => 'required|email|unique:respuestas,correo,NULL,id,encuesta_id,' . $encuestaId,
-        // ]);
-        // if ($emailValidator->fails()) {
-        //     return response()->json(['error' => $emailValidator->errors()], 400);
-        // }
+        $emailValidator = Validator::make($request->all(), [
+            'correo' => 'required|email|unique:encuestados,correo,NULL,id,encuesta_id,' . $encuestaId,
+        ]);
+        if ($emailValidator->fails()) {
+            return response()->json(['error' => $emailValidator->errors()], 400);
+        }
 
         try {
 
             DB::beginTransaction();
 
             // Creación y almacenamiento de "encuestado"
-            // $encuestado = Encuestado::create([
-            //     'correo' => $request->correo,
-            //     'encuesta_id' => $encuestaId,
-            // ]);
+            $encuestado = Encuestado::create([
+                'correo' => $request->correo,
+                'encuesta_id' => $encuestaId,
+            ]);
             
             // Guardado de las respuestas
-            // foreach ($request->respuestas as $respuestaData) {
-            foreach ($request->json() as $respuestaData) {
+            foreach ($request->respuestas as $respuestaData) {
+            // foreach ($request->json() as $respuestaData) {
 
                 $validator = Validator::make($respuestaData, [
                     'tipo_respuesta' => 'required|string',
@@ -53,7 +53,7 @@ class RespuestaController extends Controller
                     return response()->json(['error' => $validator->errors()], 400);
                 }
                 $pregunta = new Respuesta([
-                    'encuestado_id' => 1,//$encuestado->id,
+                    'encuestado_id' => $encuestado->id,
                     'tipo_respuesta' => $respuestaData['tipo_respuesta'],
                     'puntuacion' => $respuestaData['puntuacion'] ?? null,
                     'entrada_texto' => $respuestaData['entrada_texto'] ?? null,

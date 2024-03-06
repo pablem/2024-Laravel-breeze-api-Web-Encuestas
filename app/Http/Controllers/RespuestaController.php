@@ -2,15 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Encuesta;
 use App\Models\Encuestado;
-use App\Models\Pregunta;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-
-use function Pest\Laravel\json;
 
 class RespuestaController extends Controller
 {
@@ -38,12 +34,12 @@ class RespuestaController extends Controller
 
             // Creación y almacenamiento de "encuestado"
             // $encuestado = Encuestado::create([
-            //     'email' => $request->json()->email,
-            //     'encuesta_id' => $encuestaId, //SE REPITE encuesta_id EN TABLA RESPUESTA
+            //     'correo' => $request->correo,
+            //     'encuesta_id' => $encuestaId,
             // ]);
             
             // Guardado de las respuestas
-            // foreach ($request->json()->respuestas as $respuestaData) {
+            // foreach ($request->respuestas as $respuestaData) {
             foreach ($request->json() as $respuestaData) {
 
                 $validator = Validator::make($respuestaData, [
@@ -57,7 +53,7 @@ class RespuestaController extends Controller
                     return response()->json(['error' => $validator->errors()], 400);
                 }
                 $pregunta = new Respuesta([
-                    'encuestado_id' => 1,//$encuestadoId,
+                    'encuestado_id' => 1,//$encuestado->id,
                     'tipo_respuesta' => $respuestaData['tipo_respuesta'],
                     'puntuacion' => $respuestaData['puntuacion'] ?? null,
                     'entrada_texto' => $respuestaData['entrada_texto'] ?? null,

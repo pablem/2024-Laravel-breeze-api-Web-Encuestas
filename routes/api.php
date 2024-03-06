@@ -33,5 +33,5 @@ Route::post('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'sto
 Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']);
 Route::delete('/preguntas/{preguntaId}',[PreguntaController::class, 'destroy']);
 
-// Route::get('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'edit']);
+Route::post('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'store']);
 

@@ -12,7 +12,6 @@ class Respuesta extends Model
     // use HasFactory;
     protected $fillable = [
         'encuestado_id',
-        'encuesta_id',
         'tipo_respuesta',
         'puntuacion',
         'entrada_texto',

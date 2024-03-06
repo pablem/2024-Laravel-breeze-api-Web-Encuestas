@@ -19,7 +19,7 @@ class PreguntaController extends Controller
      */
     public function store(Request $request, $encuestaId)
     {
-        // $encuestaId = 1;
+        // $encuestaId = 13;
         try {
             // Iniciar una transacción ya que estamos trabajando con múltiples consultas
             DB::beginTransaction();
@@ -29,7 +29,7 @@ class PreguntaController extends Controller
                 $validator = Validator::make($preguntaData, [
                         'titulo_pregunta' => 'required|string',
                         'tipo_pregunta' => 'required|string',
-                        'seleccion' => 'nullable|array', //error al recibir arrays vacíos [] (no es problema de vadilación)
+                        'seleccion' => 'nullable|array',
                         'rango_puntuacion' => 'nullable|array',
                         // '*.opciones' => ['array', 'required_if:*.tipo_pregunta,3'], // Opcionalmente requerido solo si el tipo es "multiple choice"
                     ]);

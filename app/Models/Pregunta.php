@@ -11,6 +11,7 @@ class Pregunta extends Model
 {
     // use HasFactory;
     protected $fillable = [
+        'encuesta_id',
         'titulo_pregunta',
         'tipo_pregunta',
         'numero_pregunta',
@@ -19,7 +20,7 @@ class Pregunta extends Model
     ];
     protected $casts = [
         'rango_puntuacion' => 'json',
-        'opciones' => 'json',
+        'seleccion' => 'json',
         'tipo_pregunta' => TipoPregunta::class,
     ];
 }

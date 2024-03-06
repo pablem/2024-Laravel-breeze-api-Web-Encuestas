@@ -3,7 +3,6 @@
 use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RespuestaController;
-use App\Models\Pregunta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

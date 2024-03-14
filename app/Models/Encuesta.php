@@ -38,8 +38,8 @@ class Encuesta extends Model
     {
         parent::boot();
         static::creating(function ($encuesta) {
-            $encuesta->user_id = 1;//auth()->id();
-            $encuesta->titulo_encuesta = 'Encuesta - ' . now()->format('Y-m-d H:i:s');
+            $encuesta->user_id = auth()->id(); //1
+            // $encuesta->titulo_encuesta = 'Encuesta - ' . now()->format('Y-m-d H:i:s');
         });
     }
 

@@ -36,7 +36,7 @@ class PreguntaController extends Controller
                 if ($validator->fails()) {
                     return response()->json(['error' => $validator->errors()], 400);
                 }
-                if (isset($preguntaData['id'])) {
+                if (isset($preguntaData['id']) && $preguntaData['id'] !== null) {
                 // se asume que las preguntas nuevas no tendrán un ID asignado, si tiene, se actualizan
                     Pregunta::where('id', $preguntaData['id'])
                         ->update([

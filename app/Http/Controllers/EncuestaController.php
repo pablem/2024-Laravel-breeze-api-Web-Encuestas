@@ -13,7 +13,7 @@ class EncuestaController extends Controller
      */
     public function index()
     {
-        $encuestas = Encuesta::orderBy('created_at', 'desc')->get();
+        $encuestas = Encuesta::with('user:id,name')->orderBy('created_at', 'desc')->get();
         return response()->json($encuestas,200); 
     }
 

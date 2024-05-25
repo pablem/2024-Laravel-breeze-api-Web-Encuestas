@@ -10,9 +10,9 @@ Próximos Pasos:
 
 0. Front: correccion bugs subir respuesta. 
 X. Front: login y register cartel de error datos invalidos.
-2. Front: sesiones y variables de entorno, datos de usuario, ocultar páginas según la sesión (login), lógica logout.
-3. (cambiar Front) view unificada de crear/editar preguntas -> id nulo / id no nulo 
-	3.1 crear/editar título de la encuesta. 
+X. Front: sesiones y variables de entorno, datos de usuario, ocultar páginas según la sesión (login), lógica logout.
+X. (cambiar Front) view unificada de crear/editar preguntas -> id nulo / id no nulo 
+	X crear/editar título de la encuesta. 
 	3.2 (cambiar subir respuesta agregando el correo)
 4. Front: view lista (index) de encuestas, botones borrar, editar, publicar
 5. Back&Front: editar perfil del usuario logueado (nombre,correo?)

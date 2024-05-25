@@ -23,7 +23,7 @@
     php artisan key:generate
     ```
 
-5. **Ejecuta las Migraciones + usuario (mail: usuario@ejemplo.com pass:12345678)**
+5. **Ejecuta las Migraciones + usuario (mail: usuario@ejemplo.com pass:123456)**
     ```bash
     php artisan migrate:fresh --seed
     ```

@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Enums\UserRole;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -14,13 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
-
-        \App\Models\User::factory()->create([
-            'name' => 'soysuper',
-            'email' => 'usuario@super.com',
-            'role' => UserRole::Super->value,
-            'password' => '123456',
+        $this->call([
+        //Se hace una lista de llamadas a los seeders en orden, manteniendo el código de cada seeder desacoplado
+            UserSeeder::class,
+            EncuestaSeeder::class
         ]);
     }
 }

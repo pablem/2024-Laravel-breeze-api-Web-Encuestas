@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('encuestas', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('id_versionamiento')->nullable();
+            $table->unsignedInteger('id_versionamiento');
             $table->foreignIdFor(User::class);
             $table->string('titulo_encuesta', 100)->nullable();
             $table->text('descripcion', 100)->nullable();

@@ -16,6 +16,7 @@ class Respuesta extends Model
         'seleccion',
         'puntuacion',
         'entrada_texto',
+        'feedback_pregunta'
     ];
 
     protected $casts = [

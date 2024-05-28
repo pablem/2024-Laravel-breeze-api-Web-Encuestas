@@ -12,10 +12,11 @@ class Respuesta extends Model
     // use HasFactory;
     protected $fillable = [
         'encuestado_id',
-        'tipo_respuesta',
-        'puntuacion',
+        'pregunta_id',
+        // 'puntuacion',
         'entrada_texto',
         'seleccion',
+        'feedback_pregunta'
     ];
 
     protected $casts = [

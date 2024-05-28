@@ -9,7 +9,7 @@ class Encuestado extends Model
 {
     // use HasFactory;
     protected $fillable = [
-        'encuesta_id',
         'correo',
+        'ip_identificador'
     ];
 }

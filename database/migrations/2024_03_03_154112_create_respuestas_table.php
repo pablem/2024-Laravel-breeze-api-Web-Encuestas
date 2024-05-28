@@ -17,7 +17,7 @@ return new class extends Migration
             // $table->id();
             $table->foreignIdFor(Pregunta::class);
             $table->foreignIdFor(Encuestado::class);
-            $table->unsignedTinyInteger('puntuacion')->nullable();
+            // $table->unsignedTinyInteger('puntuacion')->nullable();
             $table->text('entrada_texto')->nullable();
             $table->json('seleccion')->nullable();
             $table->text('feedback_pregunta')->nullable();

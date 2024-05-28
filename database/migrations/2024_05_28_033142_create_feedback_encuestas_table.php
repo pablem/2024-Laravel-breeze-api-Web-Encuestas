@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Respuesta;
+use App\Models\Encuesta;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,10 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('encuestados', function (Blueprint $table) {
+        Schema::create('feedback_encuestas', function (Blueprint $table) {
             $table->id();
-            $table->string('correo')->unique();
-            $table->string('ip_identificador');
+            $table->foreignIdFor(Encuesta::class)->constrained()->onDelete('cascade');
+            $table->unsignedSmallInteger('indice_satisfaccion');
+            $table->string('comentarios')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('encuestados');
+        Schema::dropIfExists('feedback_encuestas');
     }
 };

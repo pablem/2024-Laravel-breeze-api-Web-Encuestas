@@ -15,12 +15,12 @@ return new class extends Migration
         Schema::create('preguntas', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Encuesta::class);
+            $table->integer("id_orden")->nullable();
             $table->string('titulo_pregunta', 120);
-            // $table->enum('tipo_pregunta', ['text', 'multiple choice', 'unique choice', 'list', 'rating']);
             $table->string('tipo_pregunta');
-            $table->smallInteger('numero_pregunta')->nullable();
             $table->json('seleccion')->nullable();
             $table->json('rango_puntuacion')->nullable();
+            $table->boolean('esObligatoria');
             $table->timestamps();
         });
     }

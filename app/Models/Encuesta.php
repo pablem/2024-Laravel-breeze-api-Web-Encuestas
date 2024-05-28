@@ -11,6 +11,7 @@ class Encuesta extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'id_versionamiento',
         'titulo_encuesta',
         'descripcion',
         'url',
@@ -19,7 +20,8 @@ class Encuesta extends Model
         'fecha_finalizacion',
         'es_privada',
         'es_anonima',
-        'version'
+        'version',
+        'limite_respuestas'
     ];
 
     protected $casts = [

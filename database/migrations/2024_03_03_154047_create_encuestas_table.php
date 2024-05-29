@@ -15,11 +15,11 @@ return new class extends Migration
     {
         Schema::create('encuestas', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('id_versionamiento');
+            $table->unsignedInteger('id_versionamiento')->nullable();
             $table->foreignIdFor(User::class);
             $table->string('titulo_encuesta', 100)->nullable();
             $table->text('descripcion', 100)->nullable();
-            $table->string('url')->nullable()->unique();
+            $table->string('url')->nullable();
             $table->string('estado')->default(EstadoEncuesta::Borrador->value);
             $table->date('fecha_publicacion')->nullable();
             $table->date('fecha_finalizacion')->nullable();

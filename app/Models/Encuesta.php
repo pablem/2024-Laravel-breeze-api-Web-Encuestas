@@ -45,12 +45,12 @@ class Encuesta extends Model
         });
         static::created(function ($encuesta) {
             // Control de versión
-            if (is_null($encuesta->version) || $encuesta->version == 1) {
-                $encuesta->version = 1;
+            if ($encuesta->version == 1) {
                 $encuesta->id_versionamiento = $encuesta->id;
                 $encuesta->save();
             }
         });
+
     }
 
     /**

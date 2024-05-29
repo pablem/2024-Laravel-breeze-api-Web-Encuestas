@@ -15,19 +15,18 @@ return new class extends Migration
     {
         Schema::create('encuestas', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('id_versionamiento');
+            $table->unsignedInteger('id_versionamiento')->nullable();
             $table->foreignIdFor(User::class);
             $table->string('titulo_encuesta', 40)->nullable();
             $table->text('descripcion', 100)->nullable();
             $table->string('url')->nullable();
-            // $table->enum('estado', ['borrador', 'piloto', 'publicada']);
             $table->string('estado')->default(EstadoEncuesta::Borrador->value);
             $table->date('fecha_publicacion')->nullable();
             $table->date('fecha_finalizacion')->nullable();
             $table->boolean('es_privada')->default(false);
             $table->boolean('es_anonima')->default(false);
             $table->unsignedTinyInteger('version')->default(1);
-            $table->unsignedInteger('limite_respuestas')->nullable();
+            $table->unsignedInteger('limite_respuestas')->default(0);
             $table->timestamps();
         });
     }

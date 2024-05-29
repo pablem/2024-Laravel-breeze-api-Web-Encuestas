@@ -46,6 +46,14 @@ class Encuesta extends Model
             }
             // $encuesta->titulo_encuesta = 'Encuesta - ' . now()->format('Y-m-d H:i:s');
         });
+        static::created(function ($encuesta) {
+            // Control de versión
+            if ($encuesta->version == 1) {
+                $encuesta->id_versionamiento = $encuesta->id;
+                $encuesta->save();
+            }
+        });
+
     }
 
     /**

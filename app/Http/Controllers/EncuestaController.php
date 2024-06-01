@@ -50,7 +50,7 @@ class EncuestaController extends Controller
 
     /**
      * Muestra una encuesta a partir de la url amigable (slug)
-     * 
+     *
      * @param  \Illuminate\Http\Request  $request
      * @param  string  $slug
      */
@@ -133,7 +133,7 @@ public function showByMail($slug, Request $request)
     /**
      * Show the form for editing the specified resource.
      * @param  int  $encuestaId
-     * 
+     *
      */
     public function edit($encuestaId)
     {
@@ -141,12 +141,7 @@ public function showByMail($slug, Request $request)
         if (is_null($encuesta)) {
             return response()->json(['error' => 'Encuesta no encontrada'], 404);
         }
-        // if ($encuesta->estado === EstadoEncuesta::Borrador->value) {
-        //     return response()->json($encuesta, 200);
-        // } else {
-        //     return response()->json(['error' => 'No se puede editar la encuesta. No es "Borrador".'], 403);
-        // }
-        return response()->json($encuesta, 200);
+        return response()->json($encuesta,200);
     }
 
     /**
@@ -186,105 +181,5 @@ public function showByMail($slug, Request $request)
         }
         $encuesta->delete();
         return response()->json(['message' => 'Encuesta eliminada con éxito'], 200);
-    }
-
-    /**
-     * Crea nuevo borrador a partir de un id de encuesta
-     * 
-     * @param  int  $encuestaId
-     * @return \Illuminate\Http\Response
-     */
-    public function nuevaVersion($encuestaId)
-    {
-        try {
-            $encuesta = Encuesta::find($encuestaId);
-            $borrador = new Encuesta([
-                'user_id' => $encuesta->user_id, // borrar a la hora de implementar el frontend  
-                'id_versionamiento' => $encuesta->id_versionamiento,
-                'titulo_encuesta' => $encuesta->titulo_encuesta, // . ' version ' . ($encuesta->version + 1),
-                'descripcion' => $encuesta->descripcion,
-                'estado' => EstadoEncuesta::Borrador->value,
-                'version' => $encuesta->version + 1,
-            ]);
-            $borrador->save();
-            return response()->json($borrador, 201);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
-        }
-    }
-
-    /**
-     * Pasar una encuesta al estado de publicada (o piloto)   
-     * 
-     * @param  \Illuminate\Http\Request $request
-     * @param  int  $encuestaId
-     * @return \Illuminate\Http\Response
-     */
-    public function publicar(Request $request, $encuestaId)
-    {
-        try {
-            $encuesta = Encuesta::find($encuestaId);
-            if (!$encuesta) {
-                return response()->json(['error' => 'Encuesta no encontrada'], 404);
-            }
-            // $validator = Validator::make($request->all(), [
-            //     'fecha_finalizacion' => 'required',
-            // ]);
-            // if ($validator->fails()) {
-            //     return response()->json(['error' => $validator->errors()], 400);
-            // }
-            // Validación de fecha de finalización
-            if ($request->filled('fecha_finalizacion')) {
-                $fechaFinalizacion = strtotime($request->fecha_finalizacion);
-                if ($fechaFinalizacion === false || $fechaFinalizacion < time()) {
-                    return response()->json(['error' => 'La fecha de finalización no es válida'], 400);
-                }
-            }
-            // Validación de fecha de publicación
-            // pendiente (borrador)
-            if ($request->filled('fecha_publicacion')) {
-                $fechaPublicacion = strtotime($request->fecha_publicacion);
-                if ($fechaPublicacion === false || $fechaPublicacion > time()) {
-                    return response()->json(['error' => 'La fecha de publicación no es válida'], 400);
-                }
-            }
-            //Composición de un URL amigable
-            $slug = Str::slug($encuesta->titulo_encuesta) . '-' . $encuesta->version;
-            $encuesta->update([
-                'url' => url('/encuestas/publicada/' . $slug), //cambiar: http://localhost:5173/encuesta/publicada/titulo-encuesta-1
-                'estado' => $request['estado'],
-                'fecha_publicacion' => $request->fecha_publicacion ?? null,
-                'fecha_finalizacion' => $request->fecha_finalizacion ?? null,
-                'limite_respuestas' => $request->limite_respuestas ?? null,
-                'es_privada' => $request->es_privada,
-                'es_anonima' => $request->es_anonima,
-            ]);
-            return response()->json($encuesta, 200);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
-        }
-    }
-
-    /**
-     * Marca una encuesta como finalizada.
-     *
-     * @param  \App\Models\Encuesta  $encuesta
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function finalizar($encuestaId)
-    {
-        try {
-            $encuesta = Encuesta::find($encuestaId);
-            if (is_null($encuesta)) {
-                return response()->json(['error' => 'Encuesta no encontrada'], 404);
-            }
-            $encuesta->fecha_finalizacion = now();
-            $encuesta->save();
-
-            return response()->json(['success' => 'Encuesta marcada como finalizada correctamente'], 200);
-
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
-        }
     }
 }

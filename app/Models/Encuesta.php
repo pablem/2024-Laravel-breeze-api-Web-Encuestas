@@ -6,11 +6,13 @@ use App\Enums\EstadoEncuesta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 
 class Encuesta extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'user_id',
         'id_versionamiento',
         'titulo_encuesta',
         'descripcion',
@@ -48,12 +50,12 @@ class Encuesta extends Model
         });
         static::created(function ($encuesta) {
             // Control de versión
-            if ($encuesta->version == 1) {
+            if (is_null($encuesta->version) || $encuesta->version == 1) {
+                $encuesta->version = 1;
                 $encuesta->id_versionamiento = $encuesta->id;
                 $encuesta->save();
             }
         });
-
     }
 
     /**

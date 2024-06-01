@@ -17,7 +17,7 @@ class Pregunta extends Model
         'tipo_pregunta',
         'seleccion',
         'rango_puntuacion',
-        'esObligatoria'
+        'es_obligatoria'
     ];
     protected $casts = [
         'rango_puntuacion' => 'json',

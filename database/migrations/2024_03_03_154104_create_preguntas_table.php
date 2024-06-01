@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('tipo_pregunta');
             $table->json('seleccion')->nullable();
             $table->json('rango_puntuacion')->nullable();
-            $table->boolean('esObligatoria');
+            $table->boolean('es_obligatoria');
             $table->timestamps();
         });
     }

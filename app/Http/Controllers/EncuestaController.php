@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EstadoEncuesta;
 use App\Models\Encuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,7 +15,7 @@ class EncuestaController extends Controller
     public function index()
     {
         $encuestas = Encuesta::with('user:id,name')->orderBy('created_at', 'desc')->get();
-        return response()->json($encuestas,200); 
+        return response()->json($encuestas, 200);
     }
 
     /**
@@ -46,10 +47,9 @@ class EncuestaController extends Controller
         // }
         try {
             $encuesta = Encuesta::create($request->all());
-            return response()->json($encuesta, 201); 
+            return response()->json($encuesta, 201);
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500); 
-
+            return response()->json(['error' => $th], 500);
         }
     }
 
@@ -72,7 +72,7 @@ class EncuestaController extends Controller
         if (is_null($encuesta)) {
             return response()->json(['error' => 'Encuesta no encontrada'], 404);
         }
-        return response()->json($encuesta,200); 
+        return response()->json($encuesta, 200);
     }
 
     /**
@@ -112,5 +112,30 @@ class EncuestaController extends Controller
         }
         $encuesta->delete();
         return response()->json(['message' => 'Encuesta eliminada con éxito'], 200);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $encuestaId
+     * @return \Illuminate\Http\Response
+     */
+    public function nuevaVersion($encuestaId)
+    {
+        try {
+            $encuesta = Encuesta::find($encuestaId);
+            $borrador = new Encuesta([
+                'user_id' => $encuesta->user_id,// borrar a la hora de implementar el frontend  
+                'id_versionamiento' => $encuesta->id_versionamiento,
+                'titulo_encuesta' => $encuesta->titulo_encuesta,// . ' version ' . ($encuesta->version + 1),
+                'descripcion' => $encuesta->descripcion,
+                'estado' => EstadoEncuesta::Borrador->value,
+                'version' => $encuesta->version + 1,
+            ]);
+            $borrador->save();
+            return response()->json($borrador, 201);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th], 500);
+        }
     }
 }

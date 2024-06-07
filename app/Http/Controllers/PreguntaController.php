@@ -19,7 +19,6 @@ class PreguntaController extends Controller
      */
     public function store(Request $request, $encuestaId)
     {
-        // $encuestaId = 13;
         try {
             // Iniciar una transacción ya que estamos trabajando con múltiples consultas
             DB::beginTransaction();
@@ -83,20 +82,10 @@ class PreguntaController extends Controller
             return response()->json(['error' => 'Encuesta no encontrada'], 404);
         }
 
-        $preguntas = Pregunta::where('encuesta_id', $encuestaId)->orderBy('id')->get();
+        $preguntas = Pregunta::where('encuesta_id', $encuestaId)->orderBy('id_orden')->get();
 
         return response()->json($preguntas, 200);
     }
-
-    // /**
-    //  * Formulario para editar una pregunta 
-    //  *
-    //  * @param  int  $id
-    //  * @return \Illuminate\Http\Response
-    //  */
-    // public function edit($id)
-    // {
-    // }
 
     /**
      * Remove the specified resource from storage.
@@ -122,5 +111,5 @@ class PreguntaController extends Controller
         catch (\Exception $e) {
             return response()->json(['error' => $e], 500);
         }
-    }
+    }//revisar la petición desde el front antes de modificar: borrar multiples preguntas 
 }

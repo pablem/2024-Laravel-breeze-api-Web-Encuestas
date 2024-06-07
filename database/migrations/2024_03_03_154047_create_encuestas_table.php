@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedInteger('id_versionamiento')->nullable();
             $table->foreignIdFor(User::class);
-            $table->string('titulo_encuesta', 40)->nullable();
+            $table->string('titulo_encuesta', 100)->nullable();
             $table->text('descripcion', 100)->nullable();
             $table->string('url')->nullable();
             $table->string('estado')->default(EstadoEncuesta::Borrador->value);

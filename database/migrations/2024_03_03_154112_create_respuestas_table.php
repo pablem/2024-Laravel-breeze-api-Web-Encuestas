@@ -20,7 +20,7 @@ return new class extends Migration
             // $table->unsignedTinyInteger('puntuacion')->nullable();
             $table->text('entrada_texto')->nullable();
             $table->json('seleccion')->nullable();
-            $table->text('feedback_pregunta')->nullable();
+            // $table->text('feedback_pregunta')->nullable();
             $table->timestamps();
             // Establecer clave primaria compuesta
             $table->primary(['pregunta_id', 'encuestado_id']);

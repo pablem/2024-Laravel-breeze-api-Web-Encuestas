@@ -24,11 +24,13 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 });
 
 Route::get('/encuestas', [EncuestaController::class, 'index']);
+Route::get('/encuestas/publicada/{slug}', [EncuestaController::class, 'show']);
 Route::post('/encuestas',[EncuestaController::class, 'store']);
 Route::get('/encuestas/{encuestaId}/edit',[EncuestaController::class, 'edit']);
 Route::put('/encuestas/{encuestaId}',[EncuestaController::class, 'update']);
 Route::delete('/encuestas/{encuestaId}',[EncuestaController::class, 'destroy']);
 Route::post('encuestas/{encuestaId}/nueva_version',[EncuestaController::class, 'nuevaVersion']);
+Route::put('encuestas/{encuestaId}/publicar',[EncuestaController::class, 'publicar']);
 
 Route::post('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'store']);
 Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']);

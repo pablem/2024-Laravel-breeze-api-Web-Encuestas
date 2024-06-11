@@ -25,6 +25,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 Route::get('/encuestas', [EncuestaController::class, 'index']);
 Route::get('/encuestas/publicada/{slug}', [EncuestaController::class, 'show']);
+Route::post('/encuestas/publicada/{slug}/correo', [EncuestaController::class, 'showByMail']);
 Route::post('/encuestas',[EncuestaController::class, 'store']);
 Route::get('/encuestas/{encuestaId}/edit',[EncuestaController::class, 'edit']);
 Route::put('/encuestas/{encuestaId}',[EncuestaController::class, 'update']);

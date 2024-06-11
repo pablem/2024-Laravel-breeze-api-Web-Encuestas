@@ -14,16 +14,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('respuestas', function (Blueprint $table) {
-            // $table->id();
+            $table->id();
             $table->foreignIdFor(Pregunta::class);
             $table->foreignIdFor(Encuestado::class);
-            // $table->unsignedTinyInteger('puntuacion')->nullable();
-            $table->text('entrada_texto')->nullable();
+            $table->unsignedTinyInteger('puntuacion')->nullable();
             $table->json('seleccion')->nullable();
+            $table->text('entrada_texto')->nullable();
             // $table->text('feedback_pregunta')->nullable();
             $table->timestamps();
             // Establecer clave primaria compuesta
-            $table->primary(['pregunta_id', 'encuestado_id']);
+            // $table->primary(['pregunta_id', 'encuestado_id']);
             // Añadir índices únicos adicionales
             $table->unique(['pregunta_id', 'encuestado_id']);
         });

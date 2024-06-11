@@ -13,14 +13,17 @@ class Respuesta extends Model
     protected $fillable = [
         'encuestado_id',
         'pregunta_id',
-        // 'puntuacion',
-        'entrada_texto',
         'seleccion',
-        // 'feedback_pregunta'
+        'puntuacion',
+        'entrada_texto',
     ];
 
     protected $casts = [
         'seleccion' => 'json',
-        'tipo_respuesta' => TipoPregunta::class,
     ];
+
+    public function esRespuestaVacia()
+    {
+        return is_null($this->puntuacion) && is_null($this->entrada_texto) && (is_null($this->seleccion) || empty($this->seleccion));
+    }
 }

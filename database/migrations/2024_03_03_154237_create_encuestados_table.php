@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Respuesta;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('encuestados', function (Blueprint $table) {
             $table->id();
-            $table->string('correo')->unique();
-            $table->string('ip_identificador');
+            $table->string('correo')->unique()->nullable();
+            $table->string('ip_identificador')->unique()->nullable();
             $table->timestamps();
         });
     }

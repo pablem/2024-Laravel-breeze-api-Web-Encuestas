@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\EstadoEncuesta;
 use App\Models\Encuesta;
+use App\Models\Respuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -49,17 +50,69 @@ class EncuestaController extends Controller
     /**
      * Muestra una encuesta a partir de la url amigable (slug)
      * 
+     * @param  \Illuminate\Http\Request  $request
      * @param  string  $slug
      */
-    public function show($slug)
+    public function show($slug, Request $request)
     {
         try {
-            $arraySlug = explode('-', $slug); 
+            // Obtener la dirección IP del cliente
+            $ip = $request->ip();
+
+            // Obtener título y dirección de la URL
+            $arraySlug = explode('-', $slug);
             $version = end($arraySlug);
             $encuesta = Encuesta::where('url', 'like', "%{$slug}%")->where('version', $version)->first();
+            //validación-0: ¿existe?
             if (!$encuesta) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
+            //validación-1: ¿es anónima?
+            if (!$encuesta->es_anonima) {
+                return response()->json(['error' => 'Encuesta no anónima. Debe identificarse con un correo electrónico válido.'], 403);
+            }
+            //validación-2: ¿ya ha sido respondida previamente?
+            //otras alternativas: cookies o identificadores de sesión
+            $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
+                ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')
+                ->where('preguntas.encuesta_id', $encuesta->id)
+                ->where('encuestados.ip_identificador', $ip)
+                ->first(['respuestas.*']);
+            if ($respuestaExistente) {
+                return response()->json(['error' => 'Ud. ya ha respondido esta encuesta.'], 403);
+            }
+            return response()->json($encuesta, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    public function showByMail($slug, Request $request)
+    {
+        try {
+            $correo = $request->input('correo');
+            $arraySlug = explode('-', $slug);
+            $version = end($arraySlug);
+            $encuesta = Encuesta::where('url', 'like', "%{$slug}%")->where('version', $version)->first();
+
+            if (!$encuesta) {
+                return response()->json(['error' => 'Encuesta no encontrada'], 404);
+            }
+
+            if ($encuesta->es_anonima) {
+                return response()->json(['error' => 'Esta encuesta es anónima. Ingresar sin correo.'], 403);
+            }
+
+            $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
+                ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')
+                ->where('preguntas.encuesta_id', $encuesta->id)
+                ->where('encuestados.correo', $correo)
+                ->first(['respuestas.*']);
+
+            if ($respuestaExistente) {
+                return response()->json(['error' => 'Ud. ya ha respondido esta encuesta.'], 403);
+            }
+
             return response()->json($encuesta, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
@@ -77,11 +130,12 @@ class EncuestaController extends Controller
         if (is_null($encuesta)) {
             return response()->json(['error' => 'Encuesta no encontrada'], 404);
         }
-        if ($encuesta->estado === EstadoEncuesta::Borrador->value) {
-            return response()->json($encuesta, 200);
-        } else {
-            return response()->json(['error' => 'No se puede editar la encuesta. No es "Borrador".'], 403);
-        }
+        // if ($encuesta->estado === EstadoEncuesta::Borrador->value) {
+        //     return response()->json($encuesta, 200);
+        // } else {
+        //     return response()->json(['error' => 'No se puede editar la encuesta. No es "Borrador".'], 403);
+        // }
+        return response()->json($encuesta, 200);
     }
 
     /**

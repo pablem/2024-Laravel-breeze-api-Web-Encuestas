@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EncuestaController;
+use App\Http\Controllers\EncuestadoController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RespuestaController;
 use Illuminate\Http\Request;
@@ -37,5 +38,9 @@ Route::post('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'sto
 Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']);
 Route::delete('/preguntas/{preguntaId}',[PreguntaController::class, 'destroy']);
 
-Route::post('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'store']);
+Route::post('/encuestas/responder',[RespuestaController::class, 'store']);
 
+Route::post('/encuestados',[EncuestadoController::class, 'store']);
+Route::get('/encuestados_con_correos', [EncuestadoController::class, 'getEncuestadosConCorreo']);
+Route::put('/encuestados/{id}', [EncuestadoController::class, 'update']);
+Route::delete('/encuestados', [EncuestadoController::class, 'destroy']);

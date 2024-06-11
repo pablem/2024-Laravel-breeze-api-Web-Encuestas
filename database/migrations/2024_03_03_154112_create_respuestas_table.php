@@ -15,14 +15,20 @@ return new class extends Migration
     {
         Schema::create('respuestas', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Pregunta::class);
-            $table->foreignIdFor(Encuestado::class);
+            $table->foreignIdFor(Pregunta::class)
+                ->constrained()
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
+            $table->foreignIdFor(Encuestado::class)
+                ->constrained()
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
             $table->unsignedTinyInteger('puntuacion')->nullable();
             $table->json('seleccion')->nullable();
             $table->text('entrada_texto')->nullable();
             // $table->text('feedback_pregunta')->nullable();
             $table->timestamps();
-            // Establecer clave primaria compuesta
+            // Establecer clave primaria compuesta (frmework: no convine)
             // $table->primary(['pregunta_id', 'encuestado_id']);
             // Añadir índices únicos adicionales
             $table->unique(['pregunta_id', 'encuestado_id']);

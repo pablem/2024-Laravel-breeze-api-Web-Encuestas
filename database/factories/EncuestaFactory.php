@@ -22,6 +22,7 @@ class EncuestaFactory extends Factory
         return [
         'user_id' => User::inRandomOrder()->first()->id, // Asigna un usuario random
             'titulo_encuesta' => fake()->sentence(3),
+            'id_encuesta_version' => 1,
             'descripcion' => fake()->paragraph(3),
             'url' => fake()->url,
             'estado' => fake()->randomElement(['piloto', 'publicada', 'borrador']),

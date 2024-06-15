@@ -68,11 +68,15 @@ class EncuestaController extends Controller
             if (!$encuesta) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
-            //validación-1: ¿es anónima?
+            //validación-1: ¿es finalizada?
+            if ($encuesta->es_finalizada()) {
+                return response()->json(['error' => 'Encuesta finalizada'], 403);
+            }
+            //validación-2: ¿es anónima?
             if (!$encuesta->es_anonima) {
                 return response()->json(['error' => 'Encuesta no anónima. Debe identificarse con un correo electrónico válido.'], 403);
             }
-            //validación-2: ¿ya ha sido respondida previamente?
+            //validación-3: ¿ya ha sido respondida previamente?
             //otras alternativas: cookies o identificadores de sesión
             $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
                 ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')
@@ -99,23 +103,27 @@ class EncuestaController extends Controller
             if (!$encuesta) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
-            //V1-anónima?
+            //V1-finalizada
+            if ($encuesta->es_finalizada()) {
+                return response()->json(['error' => 'Encuesta finalizada'], 403);
+            }
+            //V2-anónima?
             if ($encuesta->es_anonima) {
                 return response()->json(['error' => 'Esta encuesta es anónima. Ingresar sin correo.'], 403);
             }
-            //V2-privada?
+            //V3-privada?
             if ($encuesta->es_privada) {
-                //V2.1-pertenece?
+                //V3.1-pertenece?
                 $esMiembro = MiembroEncuestaPrivada::join('encuestados', 'miembro_encuesta_privadas.encuestado_id', '=', 'encuestados.id')
-                        ->where('encuestados.correo', $correo)
-                        ->where('miembro_encuesta_privadas.encuesta_id', $encuesta->id)
-                        ->exists();
+                    ->where('encuestados.correo', $correo)
+                    ->where('miembro_encuesta_privadas.encuesta_id', $encuesta->id)
+                    ->exists();
 
                 if (!$esMiembro) {
                     return response()->json(['error' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 403);
                 }
             }
-            //V3-ya-respondida?
+            //V4-ya-respondida?
             $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
                 ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')
                 ->where('preguntas.encuesta_id', $encuesta->id)
@@ -262,6 +270,29 @@ class EncuestaController extends Controller
                 'es_anonima' => $request->es_anonima,
             ]);
             return response()->json($encuesta, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th], 500);
+        }
+    }
+
+    /**
+     * Marca una encuesta como finalizada.
+     *
+     * @param  \App\Models\Encuesta  $encuesta
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function finalizar($encuestaId)
+    {
+        try {
+            $encuesta = Encuesta::find($encuestaId);
+            if (is_null($encuesta)) {
+                return response()->json(['error' => 'Encuesta no encontrada'], 404);
+            }
+            $encuesta->fecha_finalizacion = now();
+            $encuesta->save();
+
+            return response()->json(['success' => 'Encuesta marcada como finalizada correctamente'], 200);
+
         } catch (\Throwable $th) {
             return response()->json(['error' => $th], 500);
         }

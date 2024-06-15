@@ -75,7 +75,7 @@ class Encuesta extends Model
     public function es_finalizada(): bool
     {
         if (!$this->fecha_finalizacion) {
-            return false;
+            return false; 
         }
 
         return $this->fecha_finalizacion <= now();
@@ -87,7 +87,7 @@ class Encuesta extends Model
     public function dias_publicada(): int
     {
         if (!$this->fecha_publicacion) {
-            return 0;
+            return 0; 
         }
 
         return $this->fecha_publicacion->diffInDays(now());
@@ -99,15 +99,10 @@ class Encuesta extends Model
     public function dias_restantes(): ?int
     {
         if (!$this->fecha_finalizacion) {
-            return null;
+            return null; 
         }
 
-        return now()->diffInDays($this->fecha_finalizacion, false);
-    }
-
-    public function numeroRespuestas(): int
-    {
-        return $this->hasManyThrough(Respuesta::class, Pregunta::class)->count();
+        return now()->diffInDays($this->fecha_finalizacion, false); 
     }
 
     /**

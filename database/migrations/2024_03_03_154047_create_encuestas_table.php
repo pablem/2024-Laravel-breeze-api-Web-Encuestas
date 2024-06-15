@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class);
             $table->string('titulo_encuesta', 100)->nullable();
             $table->text('descripcion', 100)->nullable();
-            $table->string('url')->nullable();
+            $table->string('url')->nullable()->unique();
             $table->string('estado')->default(EstadoEncuesta::Borrador->value);
             $table->date('fecha_publicacion')->nullable();
             $table->date('fecha_finalizacion')->nullable();
@@ -28,6 +28,8 @@ return new class extends Migration
             $table->unsignedTinyInteger('version')->default(1);
             $table->unsignedInteger('limite_respuestas')->default(0);
             $table->timestamps();
+            // Crear índice en el campo 'url'
+            $table->index('url');
         });
     }
 

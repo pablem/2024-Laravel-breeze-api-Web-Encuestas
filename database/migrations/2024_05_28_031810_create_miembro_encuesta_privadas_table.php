@@ -13,13 +13,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('encuestas_privadas', function (Blueprint $table) {
-            // $table->id();
-            $table->foreignIdFor(Encuesta::class)->constrained()->onDelete('cascade');
-            $table->foreignIdFor(Encuestado::class)->constrained()->onDelete('cascade');
+        Schema::create('miembro_encuesta_privadas', function (Blueprint $table) {
+            $table->id();
+            $table->foreignIdFor(Encuesta::class)
+            ->constrained()
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
+            $table->foreignIdFor(Encuestado::class)
+            ->constrained()
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
             $table->timestamps();
             // Establecer clave primaria compuesta
-            $table->primary(['encuestado_id', 'encuesta_id']);
+            // $table->primary(['encuestado_id', 'encuesta_id']);
             // Añadir índices únicos adicionales
             $table->unique(['encuestado_id', 'encuesta_id']);
         });
@@ -30,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('encuestas_privadas');
+        Schema::dropIfExists('encuesta_privadas');
     }
 };

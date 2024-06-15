@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\EstadoEncuesta;
 use App\Models\Encuesta;
+use App\Models\MiembroEncuestaPrivada;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -33,13 +34,13 @@ class EncuestaController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'titulo_encuesta' => 'required|string|max:100|unique:encuestas,titulo_encuesta',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
         try {
+            $validator = Validator::make($request->all(), [
+                'titulo_encuesta' => 'required|string|max:100|unique:encuestas,titulo_encuesta',
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
+            }
             $encuesta = Encuesta::create($request->all());
             return response()->json($encuesta, 201);
         } catch (\Throwable $th) {
@@ -94,15 +95,27 @@ class EncuestaController extends Controller
             $arraySlug = explode('-', $slug);
             $version = end($arraySlug);
             $encuesta = Encuesta::where('url', 'like', "%{$slug}%")->where('version', $version)->first();
-
+            //V0-existe?
             if (!$encuesta) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
-
+            //V1-anónima?
             if ($encuesta->es_anonima) {
                 return response()->json(['error' => 'Esta encuesta es anónima. Ingresar sin correo.'], 403);
             }
+            //V2-privada?
+            if ($encuesta->es_privada) {
+                //V2.1-pertenece?
+                $esMiembro = MiembroEncuestaPrivada::join('encuestados', 'miembro_encuesta_privadas.encuestado_id', '=', 'encuestados.id')
+                        ->where('encuestados.correo', $correo)
+                        ->where('miembro_encuesta_privadas.encuesta_id', $encuesta->id)
+                        ->exists();
 
+                if (!$esMiembro) {
+                    return response()->json(['error' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 403);
+                }
+            }
+            //V3-ya-respondida?
             $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
                 ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')
                 ->where('preguntas.encuesta_id', $encuesta->id)

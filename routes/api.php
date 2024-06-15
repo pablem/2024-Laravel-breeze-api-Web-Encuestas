@@ -34,6 +34,7 @@ Route::put('/encuestas/{encuestaId}',[EncuestaController::class, 'update']);
 Route::delete('/encuestas/{encuestaId}',[EncuestaController::class, 'destroy']);
 Route::post('encuestas/{encuestaId}/nueva_version',[EncuestaController::class, 'nuevaVersion']);
 Route::put('encuestas/{encuestaId}/publicar',[EncuestaController::class, 'publicar']);
+Route::put('/encuestas/{encuestaId}/finalizar',[EncuestaController::class, 'finalizar']);
 
 Route::post('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'store']);
 Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']);

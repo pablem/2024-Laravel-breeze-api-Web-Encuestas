@@ -27,15 +27,10 @@ class Encuesta extends Model
     ];
 
     protected $casts = [
-		'estado' => EstadoEncuesta::class,
-	];
+        'estado' => EstadoEncuesta::class,
+    ];
 
-    // es publicada / porrador / o piloto
-    // dias de publicacion
-    // dias restantes
-    // piloto?? ultima version?
-
-     /**
+    /**
      * Al momento de crear una encuesta: se guarda la fk user
      */
     protected static function boot()
@@ -73,4 +68,62 @@ class Encuesta extends Model
     {
         return $this->hasMany(Pregunta::class);
     }
+
+    /**
+     * Verifica si la encuesta está finalizada
+     */
+    public function es_finalizada(): bool
+    {
+        if (!$this->fecha_finalizacion) {
+            return false; 
+        }
+
+        return $this->fecha_finalizacion <= now();
+    }
+
+    /**
+     * Calcula los días que lleva publicada la encuesta
+     */
+    public function dias_publicada(): int
+    {
+        if (!$this->fecha_publicacion) {
+            return 0; 
+        }
+
+        return $this->fecha_publicacion->diffInDays(now());
+    }
+
+    /**
+     * Calcula los días restantes para la fecha de finalización de la encuesta
+     */
+    public function dias_restantes(): ?int
+    {
+        if (!$this->fecha_finalizacion) {
+            return null; 
+        }
+
+        return now()->diffInDays($this->fecha_finalizacion, false); 
+    }
+
+    /**
+     * Verifica si esta encuesta es la última versión del id_versionamiento
+     */
+    // public function es_ultima_version(): bool
+    // {
+    //     // Buscar otras encuestas con el mismo id_versionamiento
+    //     $otrasEncuestas = self::where('id_versionamiento', $this->id_versionamiento)
+    //         ->where('id', '!=', $this->id) // Excluir la encuesta actual
+    //         ->get();
+
+    //     // Si no hay otras encuestas, esta es la última versión
+    //     if ($otrasEncuestas->isEmpty()) {
+    //         return true;
+    //     }
+
+    //     // Obtener la versión más alta entre las otras encuestas
+    //     $maxVersion = $otrasEncuestas->max('version');
+
+    //     // Comparar la versión actual con la versión más alta encontrada
+    //     return $this->version >= $maxVersion;
+    // }
 }

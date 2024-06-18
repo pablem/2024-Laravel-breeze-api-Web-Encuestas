@@ -5,6 +5,7 @@ use App\Http\Controllers\EncuestadoController;
 use App\Http\Controllers\MiembroEncuestaPrivadaController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RespuestaController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -48,3 +49,11 @@ Route::put('/encuestados/{id}', [EncuestadoController::class, 'update']);
 Route::delete('/encuestados', [EncuestadoController::class, 'destroy']);
 
 Route::post('/encuestas_privadas/{encuestaId}/miembro',[MiembroEncuestaPrivadaController::class, 'store']);
+
+Route::get('/users', [UserController::class, 'index']);
+Route::get('/users/{userId}', [UserController::class, 'show']);
+Route::get('/users/profile', [UserController::class, 'showProfile']);
+Route::post('/users', [UserController::class, 'store']);
+Route::put('/users/{userId?}', [UserController::class, 'update']); // Ruta opcional con userId
+Route::delete('/users/{userId?}', [UserController::class, 'destroy']); // Ruta opcional con userId
+

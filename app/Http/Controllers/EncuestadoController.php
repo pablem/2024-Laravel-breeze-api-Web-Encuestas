@@ -23,7 +23,7 @@ class EncuestadoController extends Controller
      */
     public function create()
     {
-        //
+        //sin uso
     }
 
     /**

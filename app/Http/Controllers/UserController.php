@@ -36,10 +36,10 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         // Verificar si el usuario autenticado es un administrador
-        $rol = Auth::user()->role->name;
-        if ($rol !== UserRole::Super->value && $rol !== UserRole::Administrador->value) {
+        if (Auth::user()->role !== UserRole::Administrador->value) {
             return response()->json(['error' => 'No autorizado para crear un usuario'], 403);
         }
+
         try {
             User::create([
                 'name' => $request->name,
@@ -59,20 +59,11 @@ class UserController extends Controller
     public function showProfile()
     {
         try {
-            $usuario = auth()->user();
+            $usuario = Auth::user();
             if (!$usuario) {
                 return response()->json(['error' => 'Perfil no encontrado'], 404);
             }
             return response()->json($usuario, 200);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th->getMessage()], 500);
-        }
-    }
-
-    public function temporal()
-    {
-        try {
-            return response()->json(['success' => 'Este es un mensaje confidencial.'], 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -94,54 +85,26 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     */
-    public function update(ProfileUpdateRequest $request, $userId)
+    public function update(ProfileUpdateRequest $request, $userId = null)
     {
         try {
-            $usuario = User::findOrFail($userId);
+            $usuario = $userId ? User::findOrFail($userId) : Auth::user();
             if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
-            $this->updateUser($request, $usuario);
-            return response()->json(['success' => 'Usuario actualizado correctamente'], 201);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th->getMessage()], 500);
-        }
-    }
-
-    public function updateProfile(ProfileUpdateRequest $request)
-    {
-        try {
-            $usuario = Auth::user();
-            if (!$usuario) {
-                return response()->json(['error' => 'Perfil no encontrado'], 404);
+            $usuario->name = $request->input('name', $usuario->name);
+            $usuario->email = $request->input('email', $usuario->email);
+            if ($request->filled('password')) {
+                $usuario->password = Hash::make($request->input('password'));
             }
-            $this->updateUser($request, $usuario);
-            return response()->json(['success' => 'Perfil actualizado correctamente'], 201);
+            if ($request->filled('role') && Auth::user()->role === UserRole::Administrador->value) {
+                $usuario->role = $request->input('role');
+            }
+            $usuario->save();
+            return response()->json(['success' => 'Usuario actualizado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
-    }
-    // Función privada para actualizar los datos del usuario
-    private function updateUser(ProfileUpdateRequest $request, User $usuario)
-    {
-        $usuario->update([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-        ]);
-        if ($request->filled('password')) {
-            $usuario->password = Hash::make($request->input('password'));
-        }
-        $rol = Auth::user()->role->name;
-        if ($request->filled('role') && ($rol === UserRole::Super->value || $rol === UserRole::Administrador->value)) {
-            $usuario->role = $request->input('role');
-        } else {
-            return response()->json(['error' => 'No autorizado para cambiar el rol'], 403);
-        }
-        $usuario->save();
     }
 
     /**
@@ -155,7 +118,7 @@ class UserController extends Controller
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
             $usuario->delete();
-            return response()->json(['success' => 'Usuario eliminado correctamente'], 200);
+            return response()->json(['success' => 'Usuario eliminado correctamente']);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }

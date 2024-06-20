@@ -52,8 +52,8 @@ Route::post('/encuestas_privadas/{encuestaId}/miembro',[MiembroEncuestaPrivadaCo
 
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/users/{userId}', [UserController::class, 'show']);
-Route::get('/users/profile', [UserController::class, 'showProfile']);
+Route::get('/profile', [UserController::class, 'showProfile']);
 Route::post('/users', [UserController::class, 'store']);
 Route::put('/users/{userId?}', [UserController::class, 'update']); // Ruta opcional con userId
-Route::delete('/users/{userId?}', [UserController::class, 'destroy']); // Ruta opcional con userId
+Route::delete('/users/{userId}', [UserController::class, 'destroy']);
 

@@ -59,7 +59,7 @@ class UserController extends Controller
     public function showProfile()
     {
         try {
-            $usuario = Auth::user();
+            $usuario = auth()->user();
             if (!$usuario) {
                 return response()->json(['error' => 'Perfil no encontrado'], 404);
             }
@@ -88,7 +88,7 @@ class UserController extends Controller
     public function update(ProfileUpdateRequest $request, $userId = null)
     {
         try {
-            $usuario = $userId ? User::findOrFail($userId) : Auth::user();
+            $usuario = $userId ? User::findOrFail($userId) : auth()->user();
             if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
@@ -97,7 +97,7 @@ class UserController extends Controller
             if ($request->filled('password')) {
                 $usuario->password = Hash::make($request->input('password'));
             }
-            if ($request->filled('role') && Auth::user()->role === UserRole::Administrador->value) {
+            if ($request->filled('role') && auth()->user()->role === UserRole::Administrador->value) {
                 $usuario->role = $request->input('role');
             }
             $usuario->save();

@@ -61,14 +61,6 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY php.ini /etc/php/8.3/cli/conf.d/99-sail.ini
 RUN chmod +x /usr/local/bin/start-container
 
-# Variables de entorno para Git
-#ARG BACKEND_REPO_URL
-#ARG BACKEND_BRANCH
-
-# Clona el repositorio del back-end
-#RUN git clone -b ${BACKEND_BRANCH} ${BACKEND_REPO_URL} /var/www/html
-
-
 EXPOSE 8000
 
 ENTRYPOINT ["start-container"]

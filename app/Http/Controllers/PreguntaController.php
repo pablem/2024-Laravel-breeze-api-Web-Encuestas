@@ -6,6 +6,7 @@ use App\Models\Encuesta;
 use App\Models\Pregunta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PreguntaController extends Controller
@@ -26,10 +27,12 @@ class PreguntaController extends Controller
             foreach ($request->json() as $preguntaData) {
 
                 $validator = Validator::make($preguntaData, [
+                        'id_orden' => 'required|integer',
                         'titulo_pregunta' => 'required|string',
                         'tipo_pregunta' => 'required|string',
                         'seleccion' => 'nullable|array',
                         'rango_puntuacion' => 'nullable|array',
+                        'es_obligatoria' => 'boolean'
                         // '*.opciones' => ['array', 'required_if:*.tipo_pregunta,3'], // Opcionalmente requerido solo si el tipo es "multiple choice"
                     ]);
                 if ($validator->fails()) {
@@ -39,18 +42,22 @@ class PreguntaController extends Controller
                 // se asume que las preguntas nuevas no tendrán un ID asignado, si tiene, se actualizan
                     Pregunta::where('id', $preguntaData['id'])
                         ->update([
+                            'id_orden' => $preguntaData['id_orden'],
                             'titulo_pregunta' => $preguntaData['titulo_pregunta'],
                             'tipo_pregunta' => $preguntaData['tipo_pregunta'],
                             'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
                             'seleccion' => $preguntaData['seleccion'] ?? null,
+                            'es_obligatoria' => $preguntaData['es_obligatoria'] ?? false
                         ]);
                 } else {
                     $pregunta = new Pregunta([
                         'encuesta_id' => $encuestaId,
+                        'id_orden' => $preguntaData['id_orden'],
                         'titulo_pregunta' => $preguntaData['titulo_pregunta'],
                         'tipo_pregunta' => $preguntaData['tipo_pregunta'],
                         'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
                         'seleccion' => $preguntaData['seleccion'] ?? null,
+                        'es_obligatoria' => $preguntaData['es_obligatoria'] ?? false
                     ]);
                     $pregunta->save();
                 }
@@ -63,8 +70,8 @@ class PreguntaController extends Controller
         } catch (\Exception $e) {
             // Deshacer la transacción en caso de error
             DB::rollBack();
-
-            return response()->json(['error' => $e], 500);
+            Log::error('Error en el método store', ['exception' => $e]); // Agrega este log para depuración
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
     

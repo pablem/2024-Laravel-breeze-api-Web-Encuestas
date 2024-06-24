@@ -54,6 +54,7 @@ Route::get('/users', [UserController::class, 'index']);
 Route::get('/users/{userId}', [UserController::class, 'show']);
 Route::get('/profile', [UserController::class, 'showProfile']);
 Route::post('/users', [UserController::class, 'store']);
-Route::put('/users/{userId?}', [UserController::class, 'update']); // Ruta opcional con userId
+Route::put('/users/{userId}', [UserController::class, 'update']); 
+Route::put('/profile', [UserController::class, 'updateProfile']);
 Route::delete('/users/{userId}', [UserController::class, 'destroy']);
 

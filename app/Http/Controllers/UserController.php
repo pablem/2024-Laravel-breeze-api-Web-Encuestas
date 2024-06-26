@@ -69,6 +69,15 @@ class UserController extends Controller
         }
     }
 
+    public function temporal()
+    {
+        try {
+            return response()->json(['success' => 'Este es un mensaje confidencial.'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
     /**
      * Display the specified resource.
      */
@@ -97,7 +106,7 @@ class UserController extends Controller
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
             $this->updateUser($request, $usuario);
-            return response()->json(['success' => 'Usuario actualizado correctamente'], 200);
+            return response()->json(['success' => 'Usuario actualizado correctamente'], 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -111,7 +120,7 @@ class UserController extends Controller
                 return response()->json(['error' => 'Perfil no encontrado'], 404);
             }
             $this->updateUser($request, $usuario);
-            return response()->json(['success' => 'Perfil actualizado correctamente'], 200);
+            return response()->json(['success' => 'Perfil actualizado correctamente'], 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -146,7 +155,7 @@ class UserController extends Controller
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
             $usuario->delete();
-            return response()->json(['success' => 'Usuario eliminado correctamente']);
+            return response()->json(['success' => 'Usuario eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }

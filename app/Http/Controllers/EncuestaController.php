@@ -67,6 +67,9 @@ class EncuestaController extends Controller
         if ($encuesta->es_finalizada()) {
             return response()->json(['code' => 'ENCUESTA_FINALIZADA', 'message' => 'Encuesta finalizada'], 200);
         }
+        if ($encuesta->limite_respuestas > 0 && $encuesta->numeroRespuestas() >= $encuesta->limite_respuestas) {
+            return response()->json(['code' => 'LIMITE_RESPUESTAS_ALCANZADO', 'message' => 'Se ha alcanzado el límite de respuestas para esta encuesta.'], 200);
+        }
         if (!$encuesta->es_anonima) {
             return response()->json(['code' => 'ENCUESTA_NO_ANONIMA', 'message' => 'Encuesta no anónima. Debe identificarse con un correo electrónico válido.'], 200);
         }
@@ -97,6 +100,9 @@ public function showByMail($slug, Request $request)
         }
         if ($encuesta->es_finalizada()) {
             return response()->json(['code' => 'ENCUESTA_FINALIZADA', 'message' => 'Encuesta finalizada'], 200);
+        }
+        if ($encuesta->limite_respuestas > 0 && $encuesta->numeroRespuestas() >= $encuesta->limite_respuestas) {
+            return response()->json(['code' => 'LIMITE_RESPUESTAS_ALCANZADO', 'message' => 'Se ha alcanzado el límite de respuestas para esta encuesta.'], 200);
         }
         if ($encuesta->es_anonima) {
             return response()->json(['code' => 'ENCUESTA_ANONIMA', 'message' => 'Esta encuesta es anónima. Ingresar sin correo.'], 200);

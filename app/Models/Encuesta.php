@@ -105,6 +105,11 @@ class Encuesta extends Model
         return now()->diffInDays($this->fecha_finalizacion, false); 
     }
 
+    public function numeroRespuestas(): int
+    {
+        return $this->hasManyThrough(Respuesta::class, Pregunta::class)->count();
+    }
+
     /**
      * Verifica si esta encuesta es la última versión del id_versionamiento
      */

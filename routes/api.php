@@ -42,6 +42,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/profile', [UserController::class, 'updateProfile']);
     //Encuestas
     Route::get('/encuestas', [EncuestaController::class, 'index']);
+    Route::get('/encuestas/{encuestaId}/edit',[EncuestaController::class, 'edit']); //getEncuesta por id 
     //Publicar o Finalizar Encuestas 
     Route::put('encuestas/{encuestaId}/publicar',[EncuestaController::class, 'publicar']);
     Route::put('/encuestas/{encuestaId}/finalizar',[EncuestaController::class, 'finalizar']);
@@ -58,7 +59,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum', 'role:Administrador,Editor'])->group(function () {
     //Encuestas
     Route::post('/encuestas',[EncuestaController::class, 'store']);
-    Route::get('/encuestas/{encuestaId}/edit',[EncuestaController::class, 'edit']);
     Route::put('/encuestas/{encuestaId}',[EncuestaController::class, 'update']);
     Route::delete('/encuestas/{encuestaId}',[EncuestaController::class, 'destroy']);
     Route::post('encuestas/{encuestaId}/nueva_version',[EncuestaController::class, 'nuevaVersion']);

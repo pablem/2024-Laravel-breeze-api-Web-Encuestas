@@ -55,90 +55,80 @@ class EncuestaController extends Controller
      * @param  string  $slug
      */
     public function show($slug, Request $request)
-    {
-        try {
-            // Obtener la dirección IP del cliente
-            $ip = $request->ip();
-
-            // Obtener título y dirección de la URL
-            $arraySlug = explode('-', $slug);
-            $version = end($arraySlug);
-            $encuesta = Encuesta::where('url', 'like', "%{$slug}%")->where('version', $version)->first();
-            //validación-0: ¿existe?
-            if (!$encuesta) {
-                return response()->json(['error' => 'Encuesta no encontrada'], 404);
-            }
-            //validación-1: ¿es finalizada?
-            if ($encuesta->es_finalizada()) {
-                return response()->json(['error' => 'Encuesta finalizada'], 403);
-            }
-            //validación-2: ¿es anónima?
-            if (!$encuesta->es_anonima) {
-                return response()->json(['error' => 'Encuesta no anónima. Debe identificarse con un correo electrónico válido.'], 403);
-            }
-            //validación-3: ¿ya ha sido respondida previamente?
-            //otras alternativas: cookies o identificadores de sesión
-            $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
-                ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')
-                ->where('preguntas.encuesta_id', $encuesta->id)
-                ->where('encuestados.ip_identificador', $ip)
-                ->first(['respuestas.*']);
-            if ($respuestaExistente) {
-                return response()->json(['error' => 'Ud. ya ha respondido esta encuesta.'], 403);
-            }
-            return response()->json($encuesta, 200);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th->getMessage()], 500);
+{
+    try {
+        // Obtener título y dirección de la URL
+        $arraySlug = explode('-', $slug);
+        $version = end($arraySlug);
+        $encuesta = Encuesta::where('url', 'like', "%{$slug}%")->where('version', $version)->first();
+        if (!$encuesta) {
+            return response()->json(['code' => 'ENCUESTA_NO_ENCONTRADA', 'message' => 'Encuesta no encontrada'], 404);
         }
+        if ($encuesta->es_finalizada()) {
+            return response()->json(['code' => 'ENCUESTA_FINALIZADA', 'message' => 'Encuesta finalizada'], 200);
+        }
+        if ($encuesta->limite_respuestas > 0 && $encuesta->numeroRespuestas() >= $encuesta->limite_respuestas) {
+            return response()->json(['code' => 'LIMITE_RESPUESTAS_ALCANZADO', 'message' => 'Se ha alcanzado el límite de respuestas para esta encuesta.'], 200);
+        }
+        if (!$encuesta->es_anonima) {
+            return response()->json(['code' => 'ENCUESTA_NO_ANONIMA', 'message' => 'Encuesta no anónima. Debe identificarse con un correo electrónico válido.'], 200);
+        }
+        $ip = $request->ip();
+        $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
+            ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')
+            ->where('preguntas.encuesta_id', $encuesta->id)
+            ->where('encuestados.ip_identificador', $ip)
+            ->first(['respuestas.*']);
+        if ($respuestaExistente) {
+            return response()->json(['code' => 'ENCUESTA_YA_RESPONDIDA', 'message' => 'Ud. ya ha respondido esta encuesta.'], 200);
+        }
+        return response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta], 200);
+    } catch (\Throwable $th) {
+        return response()->json(['code' => 'ERROR_SERVIDOR', 'message' => $th->getMessage()], 500);
     }
+}
 
-    public function showByMail($slug, Request $request)
-    {
-        try {
-            $correo = $request->input('correo');
-            $arraySlug = explode('-', $slug);
-            $version = end($arraySlug);
-            $encuesta = Encuesta::where('url', 'like', "%{$slug}%")->where('version', $version)->first();
-            //V0-existe?
-            if (!$encuesta) {
-                return response()->json(['error' => 'Encuesta no encontrada'], 404);
-            }
-            //V1-finalizada
-            if ($encuesta->es_finalizada()) {
-                return response()->json(['error' => 'Encuesta finalizada'], 403);
-            }
-            //V2-anónima?
-            if ($encuesta->es_anonima) {
-                return response()->json(['error' => 'Esta encuesta es anónima. Ingresar sin correo.'], 403);
-            }
-            //V3-privada?
-            if ($encuesta->es_privada) {
-                //V3.1-pertenece?
-                $esMiembro = MiembroEncuestaPrivada::join('encuestados', 'miembro_encuesta_privadas.encuestado_id', '=', 'encuestados.id')
-                    ->where('encuestados.correo', $correo)
-                    ->where('miembro_encuesta_privadas.encuesta_id', $encuesta->id)
-                    ->exists();
-
-                if (!$esMiembro) {
-                    return response()->json(['error' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 403);
-                }
-            }
-            //V4-ya-respondida?
-            $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
-                ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')
-                ->where('preguntas.encuesta_id', $encuesta->id)
+public function showByMail($slug, Request $request)
+{
+    try {
+        $correo = $request->input('correo');
+        $arraySlug = explode('-', $slug);
+        $version = end($arraySlug);
+        $encuesta = Encuesta::where('url', 'like', "%{$slug}%")->where('version', $version)->first();
+        if (!$encuesta) {
+            return response()->json(['code' => 'ENCUESTA_NO_ENCONTRADA', 'message' => 'Encuesta no encontrada'], 404);
+        }
+        if ($encuesta->es_finalizada()) {
+            return response()->json(['code' => 'ENCUESTA_FINALIZADA', 'message' => 'Encuesta finalizada'], 200);
+        }
+        if ($encuesta->limite_respuestas > 0 && $encuesta->numeroRespuestas() >= $encuesta->limite_respuestas) {
+            return response()->json(['code' => 'LIMITE_RESPUESTAS_ALCANZADO', 'message' => 'Se ha alcanzado el límite de respuestas para esta encuesta.'], 200);
+        }
+        if ($encuesta->es_anonima) {
+            return response()->json(['code' => 'ENCUESTA_ANONIMA', 'message' => 'Esta encuesta es anónima. Ingresar sin correo.'], 200);
+        }
+        if ($encuesta->es_privada) {
+            $esMiembro = MiembroEncuestaPrivada::join('encuestados', 'miembro_encuesta_privadas.encuestado_id', '=', 'encuestados.id')
                 ->where('encuestados.correo', $correo)
-                ->first(['respuestas.*']);
-
-            if ($respuestaExistente) {
-                return response()->json(['error' => 'Ud. ya ha respondido esta encuesta.'], 403);
+                ->where('miembro_encuesta_privadas.encuesta_id', $encuesta->id)
+                ->exists();
+            if (!$esMiembro) {
+                return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 403);
             }
-
-            return response()->json($encuesta, 200);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th->getMessage()], 500);
         }
+        $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
+            ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')
+            ->where('preguntas.encuesta_id', $encuesta->id)
+            ->where('encuestados.correo', $correo)
+            ->first(['respuestas.*']);
+        if ($respuestaExistente) {
+            return response()->json(['code' => 'ENCUESTA_YA_RESPONDIDA', 'message' => 'Ud. ya ha respondido esta encuesta.'], 200);
+        }
+        return response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta], 200);
+    } catch (\Throwable $th) {
+        return response()->json(['code' => 'ERROR_SERVIDOR', 'message' => $th->getMessage()], 500);
     }
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -261,7 +251,7 @@ class EncuestaController extends Controller
             //Composición de un URL amigable
             $slug = Str::slug($encuesta->titulo_encuesta) . '-' . $encuesta->version;
             $encuesta->update([
-                'url' => url('/encuestas/publicada/' . $slug),
+                'url' => url('/encuestas/publicada/' . $slug), //cambiar: http://localhost:5173/encuesta/publicada/titulo-encuesta-1
                 'estado' => $request['estado'],
                 'fecha_publicacion' => $request->fecha_publicacion ?? null,
                 'fecha_finalizacion' => $request->fecha_finalizacion ?? null,

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\EncuestadoController;
+use App\Http\Controllers\InformeController;
 use App\Http\Controllers\MiembroEncuestaPrivadaController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RespuestaController;
@@ -74,3 +75,5 @@ Route::post('/encuestas/publicada/{slug}/correo', [EncuestaController::class, 's
 //Preguntas
 Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']);
 Route::post('/encuestas/responder',[RespuestaController::class, 'store']); //modificar: vector de ids
+//Informes
+Route::get('/informes/{encuestaId}',[InformeController::class, 'show']);

@@ -62,13 +62,20 @@ class Encuesta extends Model
     }
 
     /**
-     * Obtiene el número de preguntas
+     * Obtiene: preguntas / miembros privados / feedback asociados a la encuesta
      */
-    public function numeroPreguntas()
+    public function preguntas()
     {
-        return $this->hasMany(Pregunta::class);
+        return $this->hasMany(Pregunta::class, 'encuesta_id', 'id');
     }
-
+    public function miembroEncuestaPrivadas()
+    {
+        return $this->hasMany(MiembroEncuestaPrivada::class, 'encuesta_id', 'id');
+    }
+    public function feedbackEncuesta()
+    {
+        return $this->hasMany(Feedback_encuesta::class, 'encuesta_id', 'id');
+    }
     /**
      * Verifica si la encuesta está finalizada
      */
@@ -99,15 +106,20 @@ class Encuesta extends Model
     public function dias_restantes(): ?int
     {
         if (!$this->fecha_finalizacion) {
-            return null; 
+            return null;
         }
-
-        return now()->diffInDays($this->fecha_finalizacion, false); 
+        $diasRestantes = now()->diffInDays($this->fecha_finalizacion, false);
+        return $diasRestantes >= 0 ? $diasRestantes : null;
     }
 
+    /**
+     * Devuelve número de encuestados que han respondido a una encuesta
+     */
     public function numeroRespuestas(): int
     {
-        return $this->hasManyThrough(Respuesta::class, Pregunta::class)->count();
+        return $this->hasManyThrough(Respuesta::class, Pregunta::class)
+            ->distinct('encuestado_id')
+            ->count('encuestado_id');
     }
 
     /**

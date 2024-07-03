@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Respuesta extends Model
 {
@@ -20,6 +21,11 @@ class Respuesta extends Model
     protected $casts = [
         'seleccion' => 'json',
     ];
+
+    public function encuestado(): BelongsTo
+    {
+        return $this->belongsTo(Encuestado::class);
+    }
 
     public function pregunta()
     {

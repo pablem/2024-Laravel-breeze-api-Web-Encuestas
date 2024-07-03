@@ -57,4 +57,9 @@ class User extends Authenticatable
     {
         return $this->role->value === $role;
     }
+
+    public function encuestas()
+    {
+        return $this->hasMany(Encuesta::class, 'user_id', 'id');
+    }
 }

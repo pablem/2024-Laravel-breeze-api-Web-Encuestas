@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Encuestado;
+use App\Models\Feedback_encuesta;
 use App\Models\Pregunta;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class RespuestaController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request) //cambio a discutir: agregar $encuestaId a la solicitud  
     {
         try {
             DB::beginTransaction();
@@ -40,7 +41,7 @@ class RespuestaController extends Controller
             // Guardado de las respuestas
             foreach ($request->respuestas as $respuestaData) {
                 $validator = Validator::make($respuestaData, [
-                    'pregunta_id' => 'required|integer',
+                    'pregunta_id' => 'required|integer',        //Se consideran también ids con campos nulos (sin responder)
                     'puntuacion' => 'nullable|integer',
                     'entrada_texto' => 'nullable|string',
                     'seleccion' => 'nullable|array',
@@ -66,10 +67,19 @@ class RespuestaController extends Controller
                 //         return response()->json(['error' => 'La pregunta es obligatoria y uno de sus campos debe ser no nulo.'], 400);
                 //     }
                 // }
-
+                
                 $respuesta->save();
             }
+            //Encuesta PILOTO
+            if ($request->has('comentarios')) {
+                $feedBackData['comentarios'] = $request->comentarios; 
 
+                //en el caso que la solicitud no tenga encuestaId, se la obtiene a partir de la pregunta_id:
+                $preguntaId = $request->input('respuestas')[0]['pregunta_id'];
+                $encuestaId = Pregunta::where('id', $preguntaId)->value('encuesta_id');
+                $feedBackData['encuesta_id'] = $encuestaId;
+                Feedback_encuesta::create($feedBackData);
+            }
             // Confirmar la transacción si todo ha ido bien
             DB::commit();
             return response()->json(['message' => 'Se guardó su respuesta'], 201);
@@ -78,16 +88,5 @@ class RespuestaController extends Controller
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
-    }
-
-
-    /**
-     * Sección Informes:
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
     }
 }

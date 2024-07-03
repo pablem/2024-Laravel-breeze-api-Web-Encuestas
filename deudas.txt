@@ -17,8 +17,7 @@
 5- Incorporar comentarios encuesta piloto
 	a. incorporar al formulario "agregar una reseña sobre la encuesta"
 		y modificar el json del end
-	b. agregar funcionalidad de guardado de comentario al método: responder, del controlador respuestasController
-	c. incorporar método del controlador encuesta: getComentarios
+
 	d. Crear vista `pages/SurveyComments/${id}`
 
 6- Completar

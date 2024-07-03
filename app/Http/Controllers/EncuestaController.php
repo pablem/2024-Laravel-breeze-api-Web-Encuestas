@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\EstadoEncuesta;
 use App\Models\Encuesta;
+use App\Models\Feedback_encuesta;
 use App\Models\MiembroEncuestaPrivada;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
@@ -287,4 +288,26 @@ public function showByMail($slug, Request $request)
             return response()->json(['error' => $th], 500);
         }
     }
+
+    /**
+     * Obtiene todos los comentarios o feedback de una encuesta piloto 
+     * 
+     * @param  int  $encuestaId
+     * @return \Illuminate\Http\Response
+     */
+    public function getFeedbacks($encuestaId)
+    {
+        $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta']);
+        if (!$encuesta) {
+            return response()->json(['error' => 'Encuesta no encontrada'], 404);
+        }
+
+        $feedbacks = Feedback_encuesta::where('encuesta_id', $encuestaId)->orderBy('created_at')->get();
+
+        if ($feedbacks->isEmpty()) {
+            return response()->json(['message' => 'No hay feedback disponible para esta encuesta'], 200);//200
+        }
+    
+        return response()->json($feedbacks, 200);    }
+
 }

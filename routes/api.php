@@ -7,6 +7,7 @@ use App\Http\Controllers\MiembroEncuestaPrivadaController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RespuestaController;
 use App\Http\Controllers\UserController;
+use App\Models\Encuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/encuestados', [EncuestadoController::class, 'destroy']);
     //Miembros de una encuesta privada
     Route::post('/encuestas_privadas/{encuestaId}/miembro',[MiembroEncuestaPrivadaController::class, 'store']);
+    //Feedback de encuestas piloto
+    Route::get('/encuestas/{encuestaId}/feedback',[EncuestaController::class, 'getFeedbacks']);
 });
 
 //Acceso: sólo editor, admin? y super (no publicador)

@@ -10,14 +10,15 @@ use Illuminate\Http\Request;
 
 class InformeController extends Controller
 {
-    public function temporal($id) {
+    public function temporal($id)
+    {
         try {
             $encuesta = Encuesta::find($id, ['titulo_encuesta']);
             if (is_null($encuesta)) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
             $preguntas = Pregunta::where('encuesta_id', $id)->orderBy('id_orden')->get(); //->select('id', 'titulo_pregunta', 'tipo_pregunta', 'seleccion', 'rango_puntuacion')
-            
+
             $pregunta = $preguntas->first();
 
             $respuestas = $pregunta->respuestas()->get(['puntuacion']);
@@ -36,16 +37,20 @@ class InformeController extends Controller
     public function show($encuestaId)
     {
         try {
-            $encuesta = Encuesta::find($encuestaId, ['titulo_encuesta']);
+            $encuesta = Encuesta::find($encuestaId, ['titulo_encuesta','fecha_finalizacion']);
             if (is_null($encuesta)) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
 
+            $diasRestantes = is_null($encuesta->dias_restantes())
+                ? 'Ya ha finalizado'
+                : (string) $encuesta->dias_restantes();
+
             $informe = [
                 'titulo_encuesta' => $encuesta->titulo_encuesta,
+                'dias_restantes' => $diasRestantes,
                 'preguntas' => []
             ];
-
             $preguntas = Pregunta::where('encuesta_id', $encuestaId)->orderBy('id_orden')->get(); //->select('id', 'titulo_pregunta', 'tipo_pregunta', 'seleccion', 'rango_puntuacion')
 
             foreach ($preguntas as $pregunta) {

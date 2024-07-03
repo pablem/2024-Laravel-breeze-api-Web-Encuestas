@@ -36,7 +36,7 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         // Verificar si el usuario autenticado es un administrador
-        $rol = Auth::user()->role->name;
+        $rol = Auth::user()->role->value;//->name
         if ($rol !== UserRole::Super->value && $rol !== UserRole::Administrador->value) {
             return response()->json(['error' => 'No autorizado para crear un usuario'], 403);
         }
@@ -135,7 +135,7 @@ class UserController extends Controller
         if ($request->filled('password')) {
             $usuario->password = Hash::make($request->input('password'));
         }
-        $rol = Auth::user()->role->name;
+        $rol = Auth::user()->role->value;//->name
         if ($request->filled('role') && ($rol === UserRole::Super->value || $rol === UserRole::Administrador->value)) {
             $usuario->role = $request->input('role');
         } else {

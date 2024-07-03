@@ -251,7 +251,7 @@ public function showByMail($slug, Request $request)
             //Composición de un URL amigable
             $slug = Str::slug($encuesta->titulo_encuesta) . '-' . $encuesta->version;
             $encuesta->update([
-                'url' => url('/encuestas/publicada/' . $slug), //cambiar: http://localhost:5173/encuesta/publicada/titulo-encuesta-1
+                'url' => 'http://localhost:5173/encuesta/' . $slug, //local: http://localhost:5173/encuesta/titulo-encuesta-1
                 'estado' => $request['estado'],
                 'fecha_publicacion' => $request->fecha_publicacion ?? null,
                 'fecha_finalizacion' => $request->fecha_finalizacion ?? null,

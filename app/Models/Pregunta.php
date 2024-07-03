@@ -24,4 +24,9 @@ class Pregunta extends Model
         'seleccion' => 'json',
         'tipo_pregunta' => TipoPregunta::class,
     ];
+
+    public function respuestas()
+    {
+        return $this->hasMany(Respuesta::class, 'pregunta_id', 'id');
+    }
 }

@@ -4,7 +4,6 @@ namespace App\Models;
 
 // use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-use App\Enums\TipoPregunta;
 use Illuminate\Database\Eloquent\Model;
 
 class Respuesta extends Model
@@ -21,6 +20,11 @@ class Respuesta extends Model
     protected $casts = [
         'seleccion' => 'json',
     ];
+
+    public function pregunta()
+    {
+        return $this->belongsTo(Pregunta::class, 'pregunta_id', 'id');
+    }
 
     public function esRespuestaVacia()
     {

@@ -39,18 +39,22 @@ class PreguntaController extends Controller
                 // se asume que las preguntas nuevas no tendrán un ID asignado, si tiene, se actualizan
                     Pregunta::where('id', $preguntaData['id'])
                         ->update([
+                            'id_orden' => $preguntaData['id_orden'],
                             'titulo_pregunta' => $preguntaData['titulo_pregunta'],
                             'tipo_pregunta' => $preguntaData['tipo_pregunta'],
                             'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
                             'seleccion' => $preguntaData['seleccion'] ?? null,
+                            'es_obligatoria' => $preguntaData['es_obligatoria'] ?? false,
                         ]);
                 } else {
                     $pregunta = new Pregunta([
                         'encuesta_id' => $encuestaId,
+                        'id_orden' => $preguntaData['id_orden'],
                         'titulo_pregunta' => $preguntaData['titulo_pregunta'],
                         'tipo_pregunta' => $preguntaData['tipo_pregunta'],
                         'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
                         'seleccion' => $preguntaData['seleccion'] ?? null,
+                        'es_obligatoria' => $preguntaData['es_obligatoria'] ?? false,
                     ]);
                     $pregunta->save();
                 }

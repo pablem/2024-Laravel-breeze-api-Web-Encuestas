@@ -21,8 +21,8 @@ class EncuestaFactory extends Factory
 
         return [
         'user_id' => User::inRandomOrder()->first()->id, // Asigna un usuario random
+        'id_versionamiento' => 1,
             'titulo_encuesta' => fake()->sentence(3),
-            'id_encuesta_version' => 1,
             'descripcion' => fake()->paragraph(3),
             'url' => fake()->url,
             'estado' => fake()->randomElement(['piloto', 'publicada', 'borrador']),
@@ -31,6 +31,7 @@ class EncuestaFactory extends Factory
             'es_privada' => fake()->numberBetween(0, 1),
             'es_anonima' => fake()->numberBetween(0, 1),
             'version' => 1,
+            'limite_respuestas' => fake()->numberBetween(0,100),
             'created_at' => now(),
             'updated_at' => now(),
         ];

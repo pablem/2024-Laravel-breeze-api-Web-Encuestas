@@ -3,12 +3,14 @@
 use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\EncuestadoController;
 use App\Http\Controllers\InformeController;
+use App\Http\Controllers\MailController;
 use App\Http\Controllers\MiembroEncuestaPrivadaController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RespuestaController;
 use App\Http\Controllers\UserController;
 use App\Models\Encuesta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\get;
@@ -49,6 +51,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('encuestas/{encuestaId}/publicar',[EncuestaController::class, 'publicar']);
     Route::put('/encuestas/{encuestaId}/finalizar',[EncuestaController::class, 'finalizar']);
     //Encuestados
+    Route::get('/encuestas/{encuestaId}/encuestados_sin_responder', [EncuestadoController::class, 'getEncuestadosSinResponder']);
     Route::get('/encuestados_con_correos', [EncuestadoController::class, 'getEncuestadosConCorreo']);
     Route::post('/encuestados',[EncuestadoController::class, 'store']);
     Route::put('/encuestados/{id}', [EncuestadoController::class, 'update']);
@@ -57,6 +60,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/encuestas_privadas/{encuestaId}/miembro',[MiembroEncuestaPrivadaController::class, 'store']);
     //Feedback de encuestas piloto
     Route::get('/encuestas/{encuestaId}/feedback',[EncuestaController::class, 'getFeedbacks']);
+    //Enviar emails
+    Route::post('/encuestas/{encuestaId}/enviar_emails', [MailController::class, 'enviar']);
 });
 
 //Acceso: sólo editor, admin? y super (no publicador)
@@ -80,3 +85,9 @@ Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getP
 Route::post('/encuestas/responder',[RespuestaController::class, 'store']); //modificar: vector de ids
 //Informes
 Route::get('/informes/{encuestaId}',[InformeController::class, 'show']);
+
+//Probando el proveedor (Mailtrap) con un texto plano
+Route::get('/enviar_texto_simple', function() {
+    Mail::to('usuario@gmail.com')
+        ->send(new \App\Mail\TextoSimpleMailable);
+})->name('simple'); 

@@ -39,3 +39,7 @@
     ```bash
     php artisan serve
     ```
+
+## Mailtrap
+
+Mailtrap es un proveedor "falso" de correos electrónicos, simula el envío y recepción de emails desde su propio panel. En producción se debe usar un proveedor como Mailgun.

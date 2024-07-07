@@ -37,7 +37,7 @@ class InformeController extends Controller
     public function show($encuestaId)
     {
         try {
-            $encuesta = Encuesta::find($encuestaId, ['titulo_encuesta','fecha_finalizacion']);
+            $encuesta = Encuesta::find($encuestaId, ['titulo_encuesta', 'fecha_finalizacion']);
             if (is_null($encuesta)) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
@@ -68,6 +68,10 @@ class InformeController extends Controller
                 if ($pregunta->tipo_pregunta->value === TipoPregunta::Rating->value) {
 
                     $resultados = $this->puntuacionResultados($pregunta);
+                }
+                if ($pregunta->tipo_pregunta->value === TipoPregunta::Numeric->value) {
+
+                    $resultados = $this->numericoResultados($pregunta);
                 }
                 if ($pregunta->tipo_pregunta->value === TipoPregunta::Text->value) {
 
@@ -188,6 +192,101 @@ class InformeController extends Controller
             'resultados' => $resultadosFormateados
         ];
     }
+
+    private function numericoResultados(Pregunta $pregunta): array
+    {
+
+        // var_dump(json_encode([$min, $step, $max]));
+
+        $respuestasEnBlanco = 0;
+        $totalRespuestas = 0;
+        $numeroNoNulos = 0;
+        $sumaTotal = 0.00;
+        $promedio = 0;
+
+        // $respuestas = $pregunta->respuestas()->get(['valor_numerico']);
+        $valoresNumericos = $pregunta->respuestas()->pluck('valor_numerico')->toArray();
+
+        if (empty($valoresNumericos)) {
+            return [
+                'titulo_pregunta' => $pregunta->titulo_pregunta,
+                'total_respuestas' => 0,
+                'total_promedio' => 0,
+                'resultados' => []
+            ];
+        }
+
+        $totalRespuestas = count($valoresNumericos);
+
+        $valoresNoNulos = array_filter($valoresNumericos, function ($valor) {
+            return !is_null($valor);
+        });
+        $numeroNoNulos = count($valoresNoNulos);
+        $sumaTotal = array_sum($valoresNoNulos);
+        $respuestasEnBlanco = $totalRespuestas - $numeroNoNulos;
+        $max = max($valoresNoNulos);
+        $min = min($valoresNoNulos);
+        $promedio = $numeroNoNulos > 0 ? $sumaTotal / $numeroNoNulos : 0;
+        
+        // Varianza (?)
+        $media = $promedio;
+        $sumatoriaDesviacionCuadrada = array_sum(array_map(function ($valor) use ($media) {
+            return pow($valor - $media, 2);
+        }, $valoresNoNulos));
+        $varianza = $numeroNoNulos > 0 ? $sumatoriaDesviacionCuadrada / $numeroNoNulos : 0;
+        $varianza = round($varianza, 2);
+        
+        
+        // Desviación estándar (?)
+        $desviacionEstandar = round(sqrt($varianza), 2);
+        
+        // var_dump(json_encode(['var' => $varianza, 'desv' => $desviacionEstandar]));
+
+        // // Dividir el rango en 5 intervalos
+        $intervalo = ($max - $min) / 5;
+        $contadores = array_fill(0, 5, 0);
+
+        foreach ($valoresNoNulos as $valor) {
+            if ($valor == $max) {
+                $contadores[4]++;
+            } else {
+                $index = floor(($valor - $min) / $intervalo);
+                $contadores[$index]++;
+            }
+        }
+
+        $resultadosFormateados = [];
+
+        for ($i = 0; $i < 5; $i++) {
+            $tramoInicio = $min + $i * $intervalo;
+            $tramoFin = $min + ($i + 1) * $intervalo;
+            $porcentaje = $totalRespuestas > 0 ? ($contadores[$i] / $totalRespuestas) * 100 : 0;
+            $resultadosFormateados[] = [
+                'titulo_opcion' => '[' . $tramoInicio . ' - ' . $tramoFin . ')',
+                'resultado_opcion' => $contadores[$i],
+                'porcentaje' => round($porcentaje, 2)
+            ];
+        }
+
+        $porcentajeBlanco = $totalRespuestas > 0 ? ($respuestasEnBlanco / $totalRespuestas) * 100 : 0;
+        $resultadosFormateados[] = [
+            'titulo_opcion' => 'sin responder',
+            'resultado_opcion' => $respuestasEnBlanco,
+            'porcentaje' => round($porcentajeBlanco, 2)
+        ];
+
+        return [
+            'titulo_pregunta' => $pregunta->titulo_pregunta,
+            'total_respuestas' => $totalRespuestas,
+            'total_promedio' => round($promedio, 2),
+            'valor_maximo' => $max,
+            'valor_minimo' => $min,
+            'varianza' => $varianza,
+            'desviacion_estandar' => $desviacionEstandar,
+            'resultados' => $resultadosFormateados
+        ];
+    }
+
 
     private function textoResultados(Pregunta $pregunta): array
     {

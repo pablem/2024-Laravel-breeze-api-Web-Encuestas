@@ -24,6 +24,7 @@ return new class extends Migration
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
             $table->unsignedTinyInteger('puntuacion')->nullable();
+            $table->float('valor_numerico',10,2)->nullable();
             $table->json('seleccion')->nullable();
             $table->text('entrada_texto')->nullable();
             // $table->text('feedback_pregunta')->nullable();

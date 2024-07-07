@@ -8,5 +8,5 @@ enum TipoPregunta: string {
     case Unique = 'unique choice';
     case List = 'list';
     case Rating = 'rating';
-
+    case Numeric = 'numeric';
 }

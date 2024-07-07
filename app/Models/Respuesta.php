@@ -15,6 +15,7 @@ class Respuesta extends Model
         'pregunta_id',
         'seleccion',
         'puntuacion',
+        'valor_numerico',
         'entrada_texto',
     ];
 
@@ -34,6 +35,6 @@ class Respuesta extends Model
 
     public function esRespuestaVacia()
     {
-        return is_null($this->puntuacion) && is_null($this->entrada_texto) && (is_null($this->seleccion) || empty($this->seleccion));
+        return is_null($this->puntuacion) && is_null($this->valor_numerico) && is_null($this->entrada_texto) && (is_null($this->seleccion) || empty($this->seleccion));
     }
 }

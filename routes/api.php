@@ -82,7 +82,7 @@ Route::get('/encuestas/publicada/{slug}', [EncuestaController::class, 'show']);
 Route::post('/encuestas/publicada/{slug}/correo', [EncuestaController::class, 'showByMail']);
 //Preguntas
 Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']);
-Route::post('/encuestas/responder',[RespuestaController::class, 'store']); //modificar: vector de ids
+Route::post('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'store']); //modificar: vector de ids
 //Informes
 Route::get('/informes/{encuestaId}',[InformeController::class, 'show']);
 

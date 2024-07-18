@@ -79,12 +79,12 @@ Route::middleware(['auth:sanctum', 'role:Administrador,Editor'])->group(function
 //Usuarios logueados y no logueados
 //Encuestas
 Route::get('/encuestas/publicada/{slug}', [EncuestaController::class, 'show']);
-Route::post('/encuestas/publicada/{slug}/correo', [EncuestaController::class, 'showByMail']);
+Route::get('/encuestas/publicada/{slug}/correo', [EncuestaController::class, 'showByMail']);
 //Preguntas
 Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']);
 Route::post('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'store']); //modificar: vector de ids
 //Informes
-Route::get('/informes/{encuestaId}',[InformeController::class, 'show']);
+Route::get('/encuestas/{encuestaId}/informe',[InformeController::class, 'show']);
 
 //Probando el proveedor (Mailtrap) con un texto plano
 Route::get('/enviar_texto_simple', function() {

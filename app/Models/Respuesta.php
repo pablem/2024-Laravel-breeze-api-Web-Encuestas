@@ -28,7 +28,7 @@ class Respuesta extends Model
         return $this->belongsTo(Encuestado::class);
     }
 
-    public function pregunta()
+    public function pregunta(): BelongsTo
     {
         return $this->belongsTo(Pregunta::class, 'pregunta_id', 'id');
     }

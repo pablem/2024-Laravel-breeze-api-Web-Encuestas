@@ -108,14 +108,14 @@ public function showByMail($slug, Request $request)
         if ($encuesta->es_anonima) {
             return response()->json(['code' => 'ENCUESTA_ANONIMA', 'message' => 'Esta encuesta es anónima. Ingresar sin correo.'], 200);
         }
-        if ($encuesta->es_privada) {
-            $esMiembro = MiembroEncuestaPrivada::join('encuestados', 'miembro_encuesta_privadas.encuestado_id', '=', 'encuestados.id')
-                ->where('encuestados.correo', $correo)
-                ->where('miembro_encuesta_privadas.encuesta_id', $encuesta->id)
-                ->exists();
-            if (!$esMiembro) {
+        if ($encuesta->es_privada && !$encuesta->esMiembro($correo)) {
+            // $esMiembro = MiembroEncuestaPrivada::join('encuestados', 'miembro_encuesta_privadas.encuestado_id', '=', 'encuestados.id')
+            //     ->where('encuestados.correo', $correo)
+            //     ->where('miembro_encuesta_privadas.encuesta_id', $encuesta->id)
+            //     ->exists();
+            // if (!$esMiembro) {
                 return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 403);
-            }
+            // }
         }
         $respuestaExistente = Respuesta::join('preguntas', 'respuestas.pregunta_id', '=', 'preguntas.id')
             ->join('encuestados', 'respuestas.encuestado_id', '=', 'encuestados.id')

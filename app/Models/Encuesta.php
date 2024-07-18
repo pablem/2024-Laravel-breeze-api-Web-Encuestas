@@ -6,6 +6,7 @@ use App\Enums\EstadoEncuesta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
 
 class Encuesta extends Model
@@ -64,25 +65,38 @@ class Encuesta extends Model
     /**
      * Obtiene: preguntas / miembros privados / feedback asociados a la encuesta
      */
-    public function preguntas()
+    public function preguntas(): HasMany
     {
         return $this->hasMany(Pregunta::class, 'encuesta_id', 'id');
     }
-    public function miembroEncuestaPrivadas()
+    public function miembroEncuestaPrivadas(): HasMany
     {
         return $this->hasMany(MiembroEncuestaPrivada::class, 'encuesta_id', 'id');
     }
-    public function feedbackEncuesta()
+    public function feedbackEncuesta(): HasMany
     {
         return $this->hasMany(Feedback_encuesta::class, 'encuesta_id', 'id');
     }
+
+    /**
+     * Verifica si el correo es miembro de la encuesta privada 
+     */
+    public function esMiembro(string $email): bool
+    {
+        return $this->hasMany(MiembroEncuestaPrivada::class, 'encuesta_id', 'id')
+            ->whereHas('encuestado', function ($query) use ($email) {
+                $query->where('correo', $email);
+            })
+            ->exists();
+    }
+
     /**
      * Verifica si la encuesta está finalizada
      */
     public function es_finalizada(): bool
     {
         if (!$this->fecha_finalizacion) {
-            return false; 
+            return false;
         }
 
         return $this->fecha_finalizacion <= now();
@@ -94,7 +108,7 @@ class Encuesta extends Model
     public function dias_publicada(): int
     {
         if (!$this->fecha_publicacion) {
-            return 0; 
+            return 0;
         }
 
         return $this->fecha_publicacion->diffInDays(now());

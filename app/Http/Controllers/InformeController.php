@@ -7,39 +7,31 @@ use App\Models\Encuesta;
 use App\Models\Pregunta;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class InformeController extends Controller
 {
-    public function temporal($id)
-    {
-        try {
-            $encuesta = Encuesta::find($id, ['titulo_encuesta']);
-            if (is_null($encuesta)) {
-                return response()->json(['error' => 'Encuesta no encontrada'], 404);
-            }
-            $preguntas = Pregunta::where('encuesta_id', $id)->orderBy('id_orden')->get(); //->select('id', 'titulo_pregunta', 'tipo_pregunta', 'seleccion', 'rango_puntuacion')
-
-            $pregunta = $preguntas->first();
-
-            $respuestas = $pregunta->respuestas()->get(['puntuacion']);
-
-            return response()->json($respuestas, 200);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
-        }
-    }
     /**
      * Display the specified resource.
      * 
+     * @param  Request  $request
      * @param  int  $encuestaId
      * @return \Illuminate\Http\Response
      */
-    public function show($encuestaId)
+    public function show(Request $request, $encuestaId)//, $email = null)
     {
         try {
-            $encuesta = Encuesta::find($encuestaId, ['titulo_encuesta', 'fecha_finalizacion']);
+            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion', 'es_privada']);
             if (is_null($encuesta)) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
+            }
+
+            if ($encuesta->es_privada) {
+                // $email = $request->input('correo');
+                if (!Auth::check() && (!$request->has('correo') || !$encuesta->esMiembro($request->input('correo')))) {
+                    // return response()->json(['error' => 'Acceso denegado. Por favor ingrese su correo electrónico.'], 403);
+                    return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Acceso denegado. Por favor ingrese su correo electrónico'], 200);
+                }
             }
 
             $diasRestantes = is_null($encuesta->dias_restantes())
@@ -57,25 +49,21 @@ class InformeController extends Controller
 
                 $resultados = [];
 
-                if (
-                    $pregunta->tipo_pregunta->value === TipoPregunta::Multiple->value ||
-                    $pregunta->tipo_pregunta->value === TipoPregunta::Unique->value ||
-                    $pregunta->tipo_pregunta->value === TipoPregunta::List->value
-                ) {
-
-                    $resultados = $this->seleccionResultados($pregunta);
-                }
-                if ($pregunta->tipo_pregunta->value === TipoPregunta::Rating->value) {
-
-                    $resultados = $this->puntuacionResultados($pregunta);
-                }
-                if ($pregunta->tipo_pregunta->value === TipoPregunta::Numeric->value) {
-
-                    $resultados = $this->numericoResultados($pregunta);
-                }
-                if ($pregunta->tipo_pregunta->value === TipoPregunta::Text->value) {
-
-                    $resultados = $this->textoResultados($pregunta);
+                switch ($pregunta->tipo_pregunta->value) {
+                    case TipoPregunta::Multiple->value:
+                    case TipoPregunta::Unique->value:
+                    case TipoPregunta::List->value:
+                        $resultados = $this->seleccionResultados($pregunta);
+                        break;
+                    case TipoPregunta::Rating->value:
+                        $resultados = $this->puntuacionResultados($pregunta);
+                        break;
+                    case TipoPregunta::Numeric->value:
+                        $resultados = $this->numericoResultados($pregunta);
+                        break;
+                    case TipoPregunta::Text->value:
+                        $resultados = $this->textoResultados($pregunta);
+                        break;
                 }
 
                 $informe['preguntas'][] = $resultados;
@@ -83,7 +71,7 @@ class InformeController extends Controller
 
             return response()->json($informe, 200);
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 
@@ -227,7 +215,7 @@ class InformeController extends Controller
         $max = max($valoresNoNulos);
         $min = min($valoresNoNulos);
         $promedio = $numeroNoNulos > 0 ? $sumaTotal / $numeroNoNulos : 0;
-        
+
         // Varianza (?)
         $media = $promedio;
         $sumatoriaDesviacionCuadrada = array_sum(array_map(function ($valor) use ($media) {
@@ -237,12 +225,13 @@ class InformeController extends Controller
         $varianza = round($varianza, 2);
         
         
+        
+
+        
         // Desviación estándar (?)
         $desviacionEstandar = round(sqrt($varianza), 2);
-        
-        // var_dump(json_encode(['var' => $varianza, 'desv' => $desviacionEstandar]));
 
-        // // Dividir el rango en 5 intervalos
+        // Dividir el rango en 5 intervalos
         $intervalo = ($max - $min) / 5;
         $contadores = array_fill(0, 5, 0);
 

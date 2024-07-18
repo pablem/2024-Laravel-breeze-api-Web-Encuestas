@@ -69,15 +69,6 @@ class UserController extends Controller
         }
     }
 
-    public function temporal()
-    {
-        try {
-            return response()->json(['success' => 'Este es un mensaje confidencial.'], 200);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th->getMessage()], 500);
-        }
-    }
-
     /**
      * Display the specified resource.
      */

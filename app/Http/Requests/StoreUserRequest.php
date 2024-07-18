@@ -14,8 +14,7 @@ class StoreUserRequest extends FormRequest
     public function authorize(): bool
     {
         //return Auth::user() && Auth::user()->role === UserRole::Administrador->value;
-
-        return true; // Ajusta esto según tus necesidades de autorización
+        return true;
     }
 
     /**

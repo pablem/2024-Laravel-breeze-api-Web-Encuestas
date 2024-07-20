@@ -40,6 +40,7 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
 });
 
 //Acceso: Todos los Usuarios Logueados:
+Route::put('encuestas/{encuestaId}/publicar',[EncuestaController::class, 'publicar']);
 Route::middleware(['auth:sanctum'])->group(function () {
     //Perfil del mismo usuario
     Route::get('/profile', [UserController::class, 'showProfile']);
@@ -48,7 +49,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/encuestas', [EncuestaController::class, 'index']);
     Route::get('/encuestas/{encuestaId}/edit',[EncuestaController::class, 'edit']); //getEncuesta por id 
     //Publicar o Finalizar Encuestas 
-    Route::put('encuestas/{encuestaId}/publicar',[EncuestaController::class, 'publicar']);
     Route::put('/encuestas/{encuestaId}/finalizar',[EncuestaController::class, 'finalizar']);
     //Encuestados
     Route::get('/encuestas/{encuestaId}/encuestados_sin_responder', [EncuestadoController::class, 'getEncuestadosSinResponder']);

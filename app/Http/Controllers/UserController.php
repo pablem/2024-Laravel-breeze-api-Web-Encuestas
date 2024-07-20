@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -36,17 +37,20 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         // Verificar si el usuario autenticado es un administrador
-        $rol = Auth::user()->role->value;//->name
-        if ($rol !== UserRole::Super->value && $rol !== UserRole::Administrador->value) {
-            return response()->json(['error' => 'No autorizado para crear un usuario'], 403);
-        }
+        // $rol = Auth::user()->role->value;//->name
+        // if ($rol !== UserRole::Super->value && $rol !== UserRole::Administrador->value) {
+        //     return response()->json(['error' => 'No autorizado para crear un usuario'], 403);
+        // }
         try {
-            User::create([
+            $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role' => $request->role ?? UserRole::Publicador->value, // Asignar rol predeterminado si no se proporciona
             ]);
+
+            event(new Registered($user));
+
             return response()->json(['success' => 'Usuario creado correctamente'], 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);

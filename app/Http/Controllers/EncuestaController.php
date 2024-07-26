@@ -260,7 +260,7 @@ class EncuestaController extends Controller
                     return $respuestaExistente;
                 }
                 //ANONIMA Pasó las verificaciones:
-                response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta], 200);
+                return response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta],200);
             } else {
                 //NO ANONIMA - se requiere correo
                 if (!$request->has('correo')) {

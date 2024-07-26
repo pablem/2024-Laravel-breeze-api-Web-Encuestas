@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Encuesta;
+use App\Models\Encuestado;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -14,9 +15,16 @@ class CompartirUrlEncuestaMailable extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(
-        protected Encuesta $encuesta,
-    ) {}
+    public Encuesta $encuesta;
+    public ?string $correo;
+    public ?int $encuestadoId;
+
+    public function __construct($encuesta, $encuestadoId = null, $correo = null) 
+    {
+        $this->encuesta = $encuesta;
+        $this->encuestadoId = $encuestadoId;
+        $this->correo = $correo;
+    }
 
     /**
      * Get the message envelope.
@@ -33,12 +41,15 @@ class CompartirUrlEncuestaMailable extends Mailable
      */
     public function content(): Content
     {
+        $url = !$this->encuestadoId 
+            ? $this->encuesta->url 
+            : $this->encuesta->url . '/' . $this->encuestadoId . '/' . sha1($this->correo); 
         return new Content(
             markdown: 'emails.compartir_url_encuesta', // vista markdown
             with: [
                 'titulo_encuesta' => $this->encuesta->titulo_encuesta,
                 'descripcion' => $this->encuesta->descripcion,
-                'url' => $this->encuesta->url,
+                'url' => $url,
                 'mensaje_finalizacion' => !($this->encuesta->fecha_finalizacion) ? 'Sin fecha de finalización.' :  'Fecha de finalización: ' . $this->encuesta->fecha_finalizacion,
             ],
         );

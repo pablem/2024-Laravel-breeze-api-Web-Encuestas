@@ -40,7 +40,6 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
 });
 
 //Acceso: Todos los Usuarios Logueados:
-Route::put('encuestas/{encuestaId}/publicar',[EncuestaController::class, 'publicar']);
 Route::middleware(['auth:sanctum'])->group(function () {
     //Perfil del mismo usuario
     Route::get('/profile', [UserController::class, 'showProfile']);
@@ -49,6 +48,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/encuestas', [EncuestaController::class, 'index']);
     Route::get('/encuestas/{encuestaId}/edit',[EncuestaController::class, 'edit']); //getEncuesta por id 
     //Publicar o Finalizar Encuestas 
+    Route::put('encuestas/{encuestaId}/publicar',[EncuestaController::class, 'publicar']);
     Route::put('/encuestas/{encuestaId}/finalizar',[EncuestaController::class, 'finalizar']);
     //Encuestados
     Route::get('/encuestas/{encuestaId}/encuestados_sin_responder', [EncuestadoController::class, 'getEncuestadosSinResponder']);
@@ -61,7 +61,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //Feedback de encuestas piloto
     Route::get('/encuestas/{encuestaId}/feedback',[EncuestaController::class, 'getFeedbacks']);
     //Enviar emails
-    Route::post('/encuestas/{encuestaId}/enviar_emails', [MailController::class, 'enviar']);
+    Route::post('/encuestas/{encuestaId}/enviar_anonimo', [MailController::class, 'enviarCorreosAnonimos']);
+    Route::post('/encuestas/{encuestaId}/enviar_registrados', [MailController::class, 'enviarCorreosRegistrados']);
 });
 
 //Acceso: sólo editor, admin? y super (no publicador)
@@ -78,8 +79,8 @@ Route::middleware(['auth:sanctum', 'role:Administrador,Editor'])->group(function
 
 //Usuarios logueados y no logueados
 //Encuestas
-Route::get('/encuestas/publicada/{slug}', [EncuestaController::class, 'show']);
-Route::get('/encuestas/publicada/{slug}/correo', [EncuestaController::class, 'showByMail']);
+Route::post('/encuestas/publicada/{slug}', [EncuestaController::class, 'showByCollectiveLink']);
+Route::get('/encuestas/publicada/{slug}/{encuestadoId}/{hash}', [EncuestaController::class, 'showByIndividualLink']);
 //Preguntas
 Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getPreguntas']);
 Route::post('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'store']); //modificar: vector de ids

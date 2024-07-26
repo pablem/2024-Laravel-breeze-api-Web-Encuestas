@@ -28,6 +28,9 @@ class TextoSimpleMailable extends Mailable
     {
         return new Envelope(
             subject: 'Texto Simple Mailable',
+            metadata: [
+                'enable_open_tracking' => true,  // Habilita el tracking de aperturas --> usar MAIL_MAILER=sendgrid
+            ],
         );
     }
 

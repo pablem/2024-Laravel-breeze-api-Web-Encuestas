@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\EstadoEncuesta;
+use App\Mail\CompartirUrlEncuestaMailable;
 use App\Models\Encuesta;
 use App\Models\Encuestado;
 use App\Models\Feedback_encuesta;
 use App\Models\MiembroEncuestaPrivada;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -224,7 +226,7 @@ class EncuestaController extends Controller
         $feedbacks = Feedback_encuesta::where('encuesta_id', $encuestaId)->orderBy('created_at')->get();
 
         if ($feedbacks->isEmpty()) {
-            return response()->json(['message' => 'No hay feedback disponible para esta encuesta'], 200); 
+            return response()->json(['message' => 'No hay feedback disponible para esta encuesta'], 200);
         }
 
         return response()->json($feedbacks, 200);
@@ -246,21 +248,40 @@ class EncuestaController extends Controller
                 return response()->json(['code' => 'ENCUESTA_NO_ENCONTRADA', 'message' => 'Encuesta no encontrada'], 404);
             }
             if ($encuesta->es_anonima) {
+                //ANONIMA Está finalizada? - limite de respuestas alcanzado? 
+                $verificacion = $this->verificarEncuesta($encuesta);
+                if ($verificacion) {
+                    return $verificacion;
+                }
+                //ANONIMA El encuestado ya respondió?
                 $ip = $request->ip();
                 $respuestaExistente = $this->verificarRespuestaExistente($encuesta, ['ip' => $ip]);
                 if ($respuestaExistente) {
                     return $respuestaExistente;
                 }
-                $verificacion = $this->verificarEncuesta($encuesta);
+                //ANONIMA Pasó las verificaciones:
+                response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta], 200);
             } else {
+                //NO ANONIMA - se requiere correo
                 if (!$request->has('correo')) {
                     return response()->json(['code' => 'ENCUESTA_NO_ANONIMA', 'message' => 'Encuesta no anónima. Debe identificarse con un correo electrónico válido.'], 200);
                 }
-                $correo = $request->input('correo'); //control de dominio correo
+                $correo = $request->input('correo');
+                // Validación del correo
+                $validator = Validator::make(['correo' => $correo], [
+                    'correo' => 'required|email',
+                ]);
+                if ($validator->fails()) {
+                    return response()->json(['code' => 'CORREO_INVALIDO', 'message' => $validator->errors()->first('correo')], 400);
+                }
+                //NO ANONIMA control con correo no verificado: finalizada? - límite? - ya respondió? - no pertenece a grupo privado?  
                 $verificacion = $this->verificarEncuesta($encuesta, $correo);
+                if ($verificacion) {
+                    return $verificacion;
+                }
+                //ANONIMA Pasó las verificaciones. Se registra el correo y se envía invitación para responder desde correo verificado
+                return $this->nuevoEncuestadoEnviar($encuesta, $correo);
             }
-            return $verificacion ? $verificacion : response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta], 200);
-
         } catch (\Throwable $th) {
             return response()->json(['code' => 'ERROR_SERVIDOR', 'message' => $th->getMessage()], 500);
         }
@@ -283,7 +304,7 @@ class EncuestaController extends Controller
             }
             $correo = Encuestado::where('id', $encuestadoId)->pluck('correo')->first();
             if (!$correo || !hash_equals(sha1($correo), (string) $hash)) {
-                return response()->json(['code' => 'EMAIL_NO_VERIFICADO', 'message' => 'Falló la verificación del correo del encuestado.'],200);//403
+                return response()->json(['code' => 'EMAIL_NO_VERIFICADO', 'message' => 'Falló la verificación del correo del encuestado.'], 200); //403
             }
 
             $verificacion = $this->verificarEncuesta($encuesta, $correo);
@@ -360,6 +381,29 @@ class EncuestaController extends Controller
         }
 
         return null;
+    }
+    private function nuevoEncuestadoEnviar($encuesta, $correo)
+    {
+        try {
+            // Recuperar encuestado / o Registrar nuevo encuestado
+            $encuestado = Encuestado::where('correo', $correo)->first();
+
+            if (!$encuestado) {
+                $encuestado = new Encuestado([
+                    'correo' => $correo
+                ]);
+                $encuestado->save();
+            }
+
+            // Enviar el correo
+            Mail::to($encuestado->correo)
+                ->send(new CompartirUrlEncuestaMailable($encuesta, $encuestado->id, $encuestado->correo));
+        } catch (\Throwable $e) {
+            return response()->json(['code' => 'ERROR_NUEVO_ENCUESTADO', 'message' => $e->getMessage()], 500);
+        }
+
+        // Retornar respuesta exitosa
+        return response()->json(['code' => 'NUEVO_ENCUESTADO', 'message' => 'Se envió la encuesta privada a su correo para que la pueda responder.'], 200);
     }
     /************ FIN VERIFICACIONES */
 

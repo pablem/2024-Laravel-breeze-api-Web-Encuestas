@@ -337,7 +337,7 @@ class EncuestaController extends Controller
      */
     private function verificarEncuesta($encuesta, $correo = null)
     {
-        if ($encuesta->es_finalizada()) {
+        if ($encuesta->esFinalizada()) {
             return response()->json(['code' => 'ENCUESTA_FINALIZADA', 'message' => 'Encuesta finalizada'], 200);
         }
         if ($encuesta->limite_respuestas > 0 && $encuesta->numeroRespuestas() >= $encuesta->limite_respuestas) {
@@ -417,7 +417,7 @@ class EncuestaController extends Controller
     //         if (!$encuesta) {
     //             return response()->json(['code' => 'ENCUESTA_NO_ENCONTRADA', 'message' => 'Encuesta no encontrada'], 404);
     //         }
-    //         if ($encuesta->es_finalizada()) {
+    //         if ($encuesta->esFinalizada()) {
     //             return response()->json(['code' => 'ENCUESTA_FINALIZADA', 'message' => 'Encuesta finalizada'], 200);
     //         }
     //         if ($encuesta->limite_respuestas > 0 && $encuesta->numeroRespuestas() >= $encuesta->limite_respuestas) {

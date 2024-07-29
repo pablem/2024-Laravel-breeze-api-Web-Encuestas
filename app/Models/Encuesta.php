@@ -93,7 +93,7 @@ class Encuesta extends Model
     /**
      * Verifica si la encuesta está finalizada
      */
-    public function es_finalizada(): bool
+    public function esFinalizada(): bool
     {
         if (!$this->fecha_finalizacion) {
             return false;
@@ -105,19 +105,19 @@ class Encuesta extends Model
     /**
      * Calcula los días que lleva publicada la encuesta
      */
-    public function dias_publicada(): int
-    {
-        if (!$this->fecha_publicacion) {
-            return 0;
-        }
+    // public function diasPublicada(): int
+    // {
+    //     if (!$this->fecha_publicacion) {
+    //         return 0;
+    //     }
 
-        return $this->fecha_publicacion->diffInDays(now());
-    }
+    //     return $this->fecha_publicacion->diffInDays(now());
+    // }
 
     /**
      * Calcula los días restantes para la fecha de finalización de la encuesta
      */
-    public function dias_restantes(): ?int
+    public function diasRestantes(): ?int
     {
         if (!$this->fecha_finalizacion) {
             return null;

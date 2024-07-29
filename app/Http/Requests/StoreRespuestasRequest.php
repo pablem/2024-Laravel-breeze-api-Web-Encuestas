@@ -54,7 +54,7 @@ class StoreRespuestasRequest extends FormRequest
                 return;
             }
 
-            if ($encuesta->es_finalizada()) {
+            if ($encuesta->esFinalizada()) {
                 $validator->errors()->add('encuesta', 'Encuesta finalizada.');
                 return;
             }

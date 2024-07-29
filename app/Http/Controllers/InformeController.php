@@ -112,10 +112,10 @@ class InformeController extends Controller
 
     private function generarInforme($encuesta)
     {
-        $resultado = $encuesta->dias_restantes();
+        $resultado = $encuesta->diasRestantes();
         $diasRestantes = is_null($resultado)
             ? 'Ya ha finalizado'
-            : (string) $encuesta->dias_restantes();
+            : (string) $encuesta->diasRestantes();
 
         $informe = [
             'titulo_encuesta' => $encuesta->titulo_encuesta,

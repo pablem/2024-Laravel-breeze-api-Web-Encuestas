@@ -272,7 +272,7 @@ class EncuestaController extends Controller
                     'correo' => 'required|email',
                 ]);
                 if ($validator->fails()) {
-                    return response()->json(['code' => 'CORREO_INVALIDO', 'message' => $validator->errors()->first('correo')], 400);
+                    return response()->json(['code' => 'EMAIL_INVALIDO', 'message' => $validator->errors()->first('correo')], 400);
                 }
                 //NO ANONIMA control con correo no verificado: finalizada? - límite? - ya respondió? - no pertenece a grupo privado?  
                 $verificacion = $this->verificarEncuesta($encuesta, $correo);

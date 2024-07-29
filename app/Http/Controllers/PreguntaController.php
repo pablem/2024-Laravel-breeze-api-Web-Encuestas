@@ -27,6 +27,17 @@ class PreguntaController extends Controller
                 if (isset($preguntaData['id'])) {
                     // se asume que las preguntas nuevas no tendrán un campo 'id', si tiene, se actualizan
                     // se asume que algunos atributos pueden no estar, se filtrar los datos nulos
+                    $validator = Validator::make($preguntaData, [
+                        'id_orden' => 'integer',
+                        'titulo_pregunta' => 'string',
+                        'tipo_pregunta' => 'string',
+                        'rango_puntuacion' => 'array',
+                        'seleccion' => 'array',
+                        'es_obligatoria' => 'boolean',
+                    ]);
+                    if ($validator->fails()) {
+                        return response()->json(['error' => $validator->errors()], 400);
+                    }
                     $updateData = array_filter([
                         'id_orden' => $preguntaData['id_orden'] ?? null,
                         'titulo_pregunta' => $preguntaData['titulo_pregunta'] ?? null,

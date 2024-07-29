@@ -8,6 +8,7 @@ use App\Models\Pregunta;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 class InformeController extends Controller
 {
@@ -23,56 +24,102 @@ class InformeController extends Controller
         try {
             $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion', 'es_privada']);
             if (is_null($encuesta)) {
-                return response()->json(['error' => 'Encuesta no encontrada'], 404);
+                return response()->json(['error' => 'Encuesta no encontrada.'], 404);
             }
-
             if ($encuesta->es_privada) {
                 // $email = $request->input('correo');
                 if (!Auth::check() && (!$request->has('correo') || !$encuesta->esMiembro($request->input('correo')))) {
-                    // return response()->json(['error' => 'Acceso denegado. Por favor ingrese su correo electrónico.'], 403);
-                    return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Acceso denegado. Por favor ingrese su correo electrónico'], 200);
+                    return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'No tiene acceso a esta encuesta privada.'], 403);
                 }
             }
-
-            $diasRestantes = is_null($encuesta->dias_restantes())
-                ? 'Ya ha finalizado'
-                : (string) $encuesta->dias_restantes();
-
-            $informe = [
-                'titulo_encuesta' => $encuesta->titulo_encuesta,
-                'dias_restantes' => $diasRestantes,
-                'preguntas' => []
-            ];
-            $preguntas = Pregunta::where('encuesta_id', $encuestaId)->orderBy('id_orden')->get(); //->select('id', 'titulo_pregunta', 'tipo_pregunta', 'seleccion', 'rango_puntuacion')
-
-            foreach ($preguntas as $pregunta) {
-
-                $resultados = [];
-
-                switch ($pregunta->tipo_pregunta->value) {
-                    case TipoPregunta::Multiple->value:
-                    case TipoPregunta::Unique->value:
-                    case TipoPregunta::List->value:
-                        $resultados = $this->seleccionResultados($pregunta);
-                        break;
-                    case TipoPregunta::Rating->value:
-                        $resultados = $this->puntuacionResultados($pregunta);
-                        break;
-                    case TipoPregunta::Numeric->value:
-                        $resultados = $this->numericoResultados($pregunta);
-                        break;
-                    case TipoPregunta::Text->value:
-                        $resultados = $this->textoResultados($pregunta);
-                        break;
-                }
-
-                $informe['preguntas'][] = $resultados;
-            }
-
+            $informe = $this->generarInforme($encuesta);
             return response()->json($informe, 200);
+
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
+    }
+
+    /**
+     * Generar y descargar informe en formato .csv
+     * 
+     * @param  int  $encuestaId
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadCsv($encuestaId)
+    {
+        try {
+            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion', 'es_privada']);
+            if (is_null($encuesta)) {
+                return response()->json(['error' => 'Encuesta no encontrada.'], 404);
+            }
+
+            $informe = $this->generarInforme($encuesta);
+
+            $callback = function () use ($informe) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['Titulo Encuesta', $informe['titulo_encuesta']]);
+                fputcsv($file, ['Dias Restantes', $informe['dias_restantes']]);
+                fputcsv($file, []);
+
+                foreach ($informe['preguntas'] as $pregunta) {
+                    fputcsv($file, [$pregunta['titulo_pregunta']]);
+                    fputcsv($file, ['Opcion', 'Resultados', 'Porcentaje']);
+                    foreach ($pregunta['resultados'] as $resultado) {
+                        fputcsv($file, [$resultado['titulo_opcion'], $resultado['resultado_opcion'], $resultado['porcentaje']]);
+                    }
+                    fputcsv($file, []);
+                }
+                fclose($file);
+            };
+
+            $filename = 'informe_' . $encuestaId . '.csv';
+            return Response::streamDownload($callback, $filename, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    private function generarInforme($encuesta)
+    {
+        $resultado = $encuesta->dias_restantes();
+        $diasRestantes = is_null($resultado)
+            ? 'Ya ha finalizado'
+            : (string) $encuesta->dias_restantes();
+
+        $informe = [
+            'titulo_encuesta' => $encuesta->titulo_encuesta,
+            'dias_restantes' => $diasRestantes,
+            'preguntas' => []
+        ];
+
+        $preguntas = Pregunta::where('encuesta_id', $encuesta->id)->orderBy('id_orden')->get();
+
+        foreach ($preguntas as $pregunta) {
+            $resultados = [];
+            switch ($pregunta->tipo_pregunta->value) {
+                case TipoPregunta::Multiple->value:
+                case TipoPregunta::Unique->value:
+                case TipoPregunta::List->value:
+                    $resultados = $this->seleccionResultados($pregunta);
+                    break;
+                case TipoPregunta::Rating->value:
+                    $resultados = $this->puntuacionResultados($pregunta);
+                    break;
+                case TipoPregunta::Numeric->value:
+                    $resultados = $this->numericoResultados($pregunta);
+                    break;
+                case TipoPregunta::Text->value:
+                    $resultados = $this->textoResultados($pregunta);
+                    break;
+            }
+            $informe['preguntas'][] = $resultados;
+        }
+        return $informe;
     }
 
     private function seleccionResultados(Pregunta $pregunta): array

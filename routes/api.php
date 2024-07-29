@@ -86,7 +86,10 @@ Route::get('/encuestas/{encuestaId}/preguntas',[PreguntaController::class, 'getP
 Route::post('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'store']); //modificar: vector de ids
 //Informes
 Route::get('/encuestas/{encuestaId}/informe',[InformeController::class, 'show']);
-Route::get('/encuestas/{encuestaId}/informe_download_csv',[InformeController::class, 'downloadCsv']);
+Route::get('/encuestas/{encuestaId}/informe_csv',[InformeController::class, 'downloadCsv']);
+Route::get('/encuestas/{encuestaId}/informe_pdf',[InformeController::class, 'downloadPdf']);
+
+Route::get('/encuestas/{encuestaId}/pdf',[InformeController::class, 'downloadSurveyPdf']);
 
 //Probando el proveedor (Mailtrap) con un texto plano
 Route::get('/enviar_texto_simple', function() {

@@ -9,6 +9,7 @@ use App\Models\Respuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InformeController extends Controller
 {
@@ -79,6 +80,31 @@ class InformeController extends Controller
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ]);
 
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Generar y descargar informe en formato pdf
+     * 
+     * @param  int  $encuestaId
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadPdf($encuestaId)
+    {
+        try {
+            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion', 'es_privada']);
+            if (is_null($encuesta)) {
+                return response()->json(['error' => 'Encuesta no encontrada.'], 404);
+            }
+
+            $informe = $this->generarInforme($encuesta);
+
+            $pdf = Pdf::loadView('informe', ['informe' => $informe]);
+            $filename = 'informe_' . $encuestaId . '.pdf';
+
+            return $pdf->download($filename);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -378,5 +404,30 @@ class InformeController extends Controller
             'total_promedio' => round($totalPromedio, 2),
             'resultados' => $resultadosFormateados
         ];
+    }
+
+    /**
+     * Generar y descargar ENCUESTAS en formato pdf (para imprimir) 
+     * 
+     * @param  int  $encuestaId
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadSurveyPdf($encuestaId)
+    {
+        try {
+            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'descripcion']);
+            if (!$encuesta) {
+                return response()->json(['error' => 'Encuesta no encontrada'], 404);
+            }
+
+            $preguntas = Pregunta::where('encuesta_id', $encuestaId)->orderBy('id_orden')->get();
+
+            $pdf = Pdf::loadView('encuesta', compact('encuesta', 'preguntas'));
+            $filename = 'encuesta_' . $encuestaId . '.pdf';
+
+            return $pdf->download($filename);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
     }
 }

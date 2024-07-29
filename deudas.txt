@@ -1,17 +1,12 @@
 	
 11- Corrección front si no se actualiza se queda con el nombre de usuario - se queda con el mensaje de error de login
 
-3- Mails: 
-	a. mandar mails masivos desde la función publicar 
-	b. verificar validez del mail
 
 4- Front restante:
 	a. compartir (lista de contactos + enviar mails)
 	ax2. agregar miembros encuesta privada
 	b. index contactos? 
-	c. ver informe
-	d. PDF: convertir encuesta a pdf
-	e. exportar datos del informe a pdf / csv
+	c. ver informe (pdf con graficos?)
 	f. agregar cuadro confirmación a finalizar encuesta
 
 5- Incorporar comentarios encuesta piloto
@@ -22,7 +17,6 @@
 
 6- Completar
 	a. recordarme (token de recordar)
-	b. verificar email con link
 	c. olvidé contraseña + blanquear contraseña
 
 7- Front: Manejo de errores y redireccionamiento

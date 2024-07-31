@@ -75,6 +75,9 @@ class PreguntaController extends Controller
                     $pregunta->save();
                 }
             }
+            //La fecha 'updated_at' de encuesta se actualiza con la modificación de alguna pregunta
+            Encuesta::where('id', $encuestaId)->update(['id' => $encuestaId]);
+            
             // Confirmar la transacción si todo ha ido bien
             DB::commit();
 

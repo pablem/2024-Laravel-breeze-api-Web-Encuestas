@@ -19,7 +19,10 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        $users = User::select('id', 'name', 'role', 'email', 'email_verified_at', 'created_at')
+            ->orderBy('name', 'asc')
+            ->get();
+
         return response()->json($users, 200);
     }
 
@@ -100,43 +103,27 @@ class UserController extends Controller
             if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
-            $this->updateUser($request, $usuario);
+            // si cambia email blanquear el campo email verificado
+            if ($usuario->email !== $request->input('email')) {
+                $usuario->email_verified_at = null;
+            }
+            $usuario->update([
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+            ]);
+            if ($request->filled('password')) {
+                $usuario->password = Hash::make($request->input('password'));
+            }
+            // verifica admin para cambiar el rol
+            $rol = Auth::user()->role->value;
+            if ($request->filled('role') && ($rol === UserRole::Super->value || $rol === UserRole::Administrador->value)) {
+                $usuario->role = $request->input('role');
+            } 
+            $usuario->save();
             return response()->json(['success' => 'Usuario actualizado correctamente'], 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
-    }
-
-    public function updateProfile(ProfileUpdateRequest $request)
-    {
-        try {
-            $usuario = Auth::user();
-            if (!$usuario) {
-                return response()->json(['error' => 'Perfil no encontrado'], 404);
-            }
-            $this->updateUser($request, $usuario);
-            return response()->json(['success' => 'Perfil actualizado correctamente'], 201);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th->getMessage()], 500);
-        }
-    }
-    // Función privada para actualizar los datos del usuario
-    private function updateUser(ProfileUpdateRequest $request, User $usuario)
-    {
-        $usuario->update([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-        ]);
-        if ($request->filled('password')) {
-            $usuario->password = Hash::make($request->input('password'));
-        }
-        $rol = Auth::user()->role->value;//->name
-        if ($request->filled('role') && ($rol === UserRole::Super->value || $rol === UserRole::Administrador->value)) {
-            $usuario->role = $request->input('role');
-        } else {
-            return response()->json(['error' => 'No autorizado para cambiar el rol'], 403);
-        }
-        $usuario->save();
     }
 
     /**

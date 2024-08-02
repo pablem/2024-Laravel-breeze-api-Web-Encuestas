@@ -33,9 +33,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 //Acceso: sólo Usuarios Administradores (y Superusuario)
 Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
     Route::get('/users', [UserController::class, 'index']);
-    Route::get('/users/{userId}', [UserController::class, 'show']);
-    Route::post('/users', [UserController::class, 'store']);
-    Route::put('/users/{userId}', [UserController::class, 'update']); 
+    Route::post('/users', [UserController::class, 'store']);     
     Route::delete('/users/{userId}', [UserController::class, 'destroy']);
 });
 
@@ -43,7 +41,7 @@ Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     //Perfil del mismo usuario
     Route::get('/profile', [UserController::class, 'showProfile']);
-    Route::put('/profile', [UserController::class, 'updateProfile']);
+    Route::put('/users/{userId}', [UserController::class, 'update']);
     //Encuestas
     Route::get('/encuestas', [EncuestaController::class, 'index']);
     Route::get('/encuestas/{encuestaId}/edit',[EncuestaController::class, 'edit']); //getEncuesta por id 

@@ -15,9 +15,10 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules()
     {
+        $toIgnore = $this->filled('previous_email_id') ? $this->input('previous_email_id') : $this->user()->id;
         return [
             'name' => ['string', 'max:255'],
-            'email' => ['email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
+            'email' => ['email', 'max:255', Rule::unique(User::class)->ignore($toIgnore)],
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
             'role' => ['nullable', 'string', Rule::in(['Administrador', 'Editor', 'Publicador'])],
         ];

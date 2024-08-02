@@ -33,6 +33,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 //Acceso: sólo Usuarios Administradores (y Superusuario)
 Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
     Route::get('/users', [UserController::class, 'index']);
+    Route::get('/users/{userId}', [UserController::class, 'show']);
     Route::post('/users', [UserController::class, 'store']);     
     Route::delete('/users/{userId}', [UserController::class, 'destroy']);
 });

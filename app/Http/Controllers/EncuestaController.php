@@ -21,7 +21,14 @@ class EncuestaController extends Controller
      */
     public function index()
     {
-        $encuestas = Encuesta::with('user:id,name')->orderBy('created_at', 'desc')->get();
+        $encuestas = Encuesta::with('user:id,name')
+            ->select('id', 'titulo_encuesta', 'estado', 'fecha_finalizacion', 'user_id', 'created_at', 'updated_at')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        foreach ($encuestas as $encuesta) {
+            $encuesta->es_finalizada = $encuesta->esFinalizada();
+        }
         return response()->json($encuestas, 200);
     }
 
@@ -260,7 +267,7 @@ class EncuestaController extends Controller
                     return $respuestaExistente;
                 }
                 //ANONIMA Pasó las verificaciones:
-                return response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta],200);
+                return response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta], 200);
             } else {
                 //NO ANONIMA - se requiere correo
                 if (!$request->has('correo')) {
@@ -310,7 +317,6 @@ class EncuestaController extends Controller
             $verificacion = $this->verificarEncuesta($encuesta, $correo);
 
             return $verificacion ? $verificacion : response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta]);
-
         } catch (\Throwable $th) {
             return response()->json(['code' => 'ERROR_SERVIDOR', 'message' => $th->getMessage()]);
         }

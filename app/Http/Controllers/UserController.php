@@ -54,7 +54,7 @@ class UserController extends Controller
 
             event(new Registered($user));
 
-            return response()->json(['success' => 'Usuario creado correctamente'], 201);
+            return response()->json(['message' => 'Usuario creado correctamente'], 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -123,7 +123,7 @@ class UserController extends Controller
                 $usuario->role = $request->input('role');
             } 
             $usuario->save();
-            return response()->json(['success' => 'Usuario actualizado correctamente'], 201);
+            return response()->json(['message' => 'Usuario actualizado correctamente'], 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -140,7 +140,7 @@ class UserController extends Controller
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
             $usuario->delete();
-            return response()->json(['success' => 'Usuario eliminado correctamente'], 200);
+            return response()->json(['message' => 'Usuario eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }

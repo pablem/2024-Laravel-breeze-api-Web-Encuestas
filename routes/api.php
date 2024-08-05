@@ -60,9 +60,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //Feedback de encuestas piloto
     Route::get('/encuestas/{encuestaId}/feedback',[EncuestaController::class, 'getFeedbacks']);
     //Enviar emails
-    Route::post('/encuestas/{encuestaId}/enviar_anonimo', [MailController::class, 'enviarCorreosAnonimos']);
-    Route::post('/encuestas/{encuestaId}/enviar_registrados', [MailController::class, 'enviarCorreosRegistrados']);
 });
+Route::post('/encuestas/{encuestaId}/enviar_correos', [MailController::class, 'enviarCorreos']);
 
 //Acceso: sólo editor, admin? y super (no publicador)
 Route::middleware(['auth:sanctum', 'role:Administrador,Editor'])->group(function () {

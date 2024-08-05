@@ -22,7 +22,7 @@ class EncuestaController extends Controller
     public function index()
     {
         $encuestas = Encuesta::with('user:id,name')
-            ->select('id', 'titulo_encuesta', 'estado', 'fecha_finalizacion', 'user_id', 'created_at', 'updated_at')
+            ->select('id', 'titulo_encuesta', 'estado', 'es_anonima', 'es_privada', 'fecha_finalizacion', 'user_id', 'created_at', 'updated_at')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -211,7 +211,7 @@ class EncuestaController extends Controller
             $encuesta->fecha_finalizacion = now();
             $encuesta->save();
 
-            return response()->json(['success' => 'Encuesta marcada como finalizada correctamente'], 200);
+            return response()->json(['message' => 'Encuesta marcada como finalizada correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th], 500);
         }

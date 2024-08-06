@@ -50,18 +50,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('encuestas/{encuestaId}/publicar',[EncuestaController::class, 'publicar']);
     Route::put('/encuestas/{encuestaId}/finalizar',[EncuestaController::class, 'finalizar']);
     //Encuestados
+    Route::get('/encuestados_con_correo', [EncuestadoController::class, 'getEncuestadosConCorreo']);
     Route::get('/encuestas/{encuestaId}/encuestados_sin_responder', [EncuestadoController::class, 'getEncuestadosSinResponder']);
-    Route::get('/encuestados_con_correos', [EncuestadoController::class, 'getEncuestadosConCorreo']);
+    Route::get('/encuestados_privados/{encuestaId}', [EncuestadoController::class, 'getEncuestadosPrivados']);
     Route::post('/encuestados',[EncuestadoController::class, 'store']);
     Route::put('/encuestados/{id}', [EncuestadoController::class, 'update']);
-    Route::delete('/encuestados', [EncuestadoController::class, 'destroy']);
     //Miembros de una encuesta privada
-    Route::post('/encuestas_privadas/{encuestaId}/miembro',[MiembroEncuestaPrivadaController::class, 'store']);
+    Route::post('/miembros_privados/{encuestaId}',[MiembroEncuestaPrivadaController::class, 'store']);
     //Feedback de encuestas piloto
     Route::get('/encuestas/{encuestaId}/feedback',[EncuestaController::class, 'getFeedbacks']);
     //Enviar emails
+    Route::post('/encuestas/{encuestaId}/enviar_correos', [MailController::class, 'enviarCorreos']);
 });
-Route::post('/encuestas/{encuestaId}/enviar_correos', [MailController::class, 'enviarCorreos']);
+Route::delete('/encuestados', [EncuestadoController::class, 'destroy']);
+
 
 //Acceso: sólo editor, admin? y super (no publicador)
 Route::middleware(['auth:sanctum', 'role:Administrador,Editor'])->group(function () {

@@ -6,6 +6,8 @@ namespace App\Models;
 
 use App\Enums\TipoPregunta;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pregunta extends Model
 {
@@ -24,4 +26,14 @@ class Pregunta extends Model
         'seleccion' => 'json',
         'tipo_pregunta' => TipoPregunta::class,
     ];
+
+    public function encuesta(): BelongsTo
+    {
+        return $this->belongsTo(Encuesta::class);
+    }
+
+    public function respuestas(): HasMany
+    {
+        return $this->hasMany(Respuesta::class, 'pregunta_id', 'id');
+    }
 }

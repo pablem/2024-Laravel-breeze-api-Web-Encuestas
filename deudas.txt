@@ -1,49 +1,25 @@
-1- hacer index de tablas desde migraciones 
-2- control confirme contraseña
-3- agregar rol o tipo de usuario desde el front y validación de rol en controlador
-4- recuperar estado de sesión y datos usuario, usar hook useSWR o seguir el tutorial de yt front
-    4.1 -> se produce un error al registrar un nuevo usuario, cambia la sesión, ese cambio no se ve reflejado en el front
-    4.2 -> leer sobre validaciòn en laravel y el método csrf 
-5-  
-
-Próximos Pasos:
-
-0. Front: correccion bugs subir respuesta. 
-X. Front: login y register cartel de error datos invalidos.
-X. Front: sesiones y variables de entorno, datos de usuario, ocultar páginas según la sesión (login), lógica logout.
-X. (cambiar Front) view unificada de crear/editar preguntas -> id nulo / id no nulo 
-	X crear/editar título de la encuesta. 
-	3.2 (cambiar subir respuesta agregando el correo)
-4. Front: view lista (index) de encuestas, botones borrar, editar, publicar
-5. Back&Front: editar perfil del usuario logueado (nombre,correo?)
-6. Back&Front: view del admin -> lista (index) de usuarios, borrar, cambiar rol.
-7. Back&Front: Lista de contactos, borrar, agregar.
-8. Back: librería enviar mails masivos. (y controlar validez de un mail?)
-9. Back&Front: view publicar.
-10.  (modificar B&F) encuesta privada: agregar control de mail
-11.  (modificar B&F) encuesta piloto: agregar preguntas de control de calidad
-12. encuesta anónima: cambios?
-13. Back&Front: view configurar generar informe
-14. Back&Front: view mostrar informe
-15. Back: librería exportar pdf, txt, csv
-16. PENDIENTE A DISCUTIR: versiones piloto / publicadas
-
-REUNIóN 7/3/2024
-1. id encuesta extra para encuesta, botón para crear nueva versión.
 	
-2. una persona que tenga los dos roles 11, 12, 21 
-	crear un super admin en migraciones, los admin se pueden borrar.
+11- Corrección front si no se actualiza se queda con el nombre de usuario - se queda con el mensaje de error de login
 
-3. documentación: limitaciones del sistema --> sólo control de respuestas repetidas con correo. -->  que habría que hacer:  control de ip.
-4. documentación: explorar framework y hablar sobre eso las features que.
-5. encuesta enonima con chequeo de ip?
 
-6. Informes: General: tasa de abandono (preguntas incompletas), feature indice de satisfacción que le pareció la encuesta, 
+4- Front restante:
+	a. compartir (lista de contactos + enviar mails)
+	ax2. agregar miembros encuesta privada
+	b. index contactos? 
+	c. ver informe (pdf con graficos?)
+	f. agregar cuadro confirmación a finalizar encuesta
 
-lista de encuestas
+5- Incorporar comentarios encuesta piloto
+	a. incorporar al formulario "agregar una reseña sobre la encuesta"
+		y modificar el json del end
 
-vista previa -> volver (lista o edición) | publicar -> como piloto
-             -> nueva version (en caso de piloto o encuestada)		
-	     -> guardar pdf (feature)
-	
+	d. Crear vista `pages/SurveyComments/${id}`
+
+6- Completar
+	a. recordarme (token de recordar)
+	c. olvidé contraseña + blanquear contraseña
+
+7- Front: Manejo de errores y redireccionamiento
+
+
 

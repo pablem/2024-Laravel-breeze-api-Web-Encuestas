@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,7 +19,10 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        $users = User::select('id', 'name', 'role', 'email', 'email_verified_at', 'created_at')
+            ->orderBy('name', 'asc')
+            ->get();
+
         return response()->json($users, 200);
     }
 
@@ -36,18 +40,21 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         // Verificar si el usuario autenticado es un administrador
-        if (Auth::user()->role !== UserRole::Administrador->value) {
-            return response()->json(['error' => 'No autorizado para crear un usuario'], 403);
-        }
-
+        // $rol = Auth::user()->role->value;//->name
+        // if ($rol !== UserRole::Super->value && $rol !== UserRole::Administrador->value) {
+        //     return response()->json(['error' => 'No autorizado para crear un usuario'], 403);
+        // }
         try {
-            User::create([
+            $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role' => $request->role ?? UserRole::Publicador->value, // Asignar rol predeterminado si no se proporciona
             ]);
-            return response()->json(['success' => 'Usuario creado correctamente'], 201);
+
+            event(new Registered($user));
+
+            return response()->json(['message' => 'Usuario creado correctamente'], 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -59,7 +66,7 @@ class UserController extends Controller
     public function showProfile()
     {
         try {
-            $usuario = Auth::user();
+            $usuario = auth()->user();
             if (!$usuario) {
                 return response()->json(['error' => 'Perfil no encontrado'], 404);
             }
@@ -85,23 +92,38 @@ class UserController extends Controller
         }
     }
 
-    public function update(ProfileUpdateRequest $request, $userId = null)
+    /**
+     * Update the specified resource in storage.
+     *
+     */
+    public function update(ProfileUpdateRequest $request, $userId)
     {
         try {
-            $usuario = $userId ? User::findOrFail($userId) : Auth::user();
+            $usuario = User::findOrFail($userId);
             if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
-            $usuario->name = $request->input('name', $usuario->name);
-            $usuario->email = $request->input('email', $usuario->email);
+            if ($request->filled('previous_email_id') && !($usuario->hasRole(UserRole::Super->value) || $usuario->hasRole(UserRole::Administrador->value)) ) {
+                return response()->json(['error' => 'No autorizado para cambiar el rol'], 403);
+            }
+            // si cambia email blanquear el campo email verificado
+            if ($usuario->email !== $request->input('email')) {
+                $usuario->email_verified_at = null;
+            }
+            $usuario->update([
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+            ]);
             if ($request->filled('password')) {
                 $usuario->password = Hash::make($request->input('password'));
             }
-            if ($request->filled('role') && Auth::user()->role === UserRole::Administrador->value) {
+            // verifica admin para cambiar el rol
+            $rol = Auth::user()->role->value;
+            if ($request->filled('role') && ($rol === UserRole::Super->value || $rol === UserRole::Administrador->value)) {
                 $usuario->role = $request->input('role');
-            }
+            } 
             $usuario->save();
-            return response()->json(['success' => 'Usuario actualizado correctamente'], 200);
+            return response()->json(['message' => 'Usuario actualizado correctamente'], 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -118,7 +140,7 @@ class UserController extends Controller
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
             $usuario->delete();
-            return response()->json(['success' => 'Usuario eliminado correctamente']);
+            return response()->json(['message' => 'Usuario eliminado correctamente'], 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }

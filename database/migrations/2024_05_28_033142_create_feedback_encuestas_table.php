@@ -14,8 +14,8 @@ return new class extends Migration
     {
         Schema::create('feedback_encuestas', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Encuesta::class)->constrained()->onDelete('cascade');
-            $table->unsignedSmallInteger('indice_satisfaccion');
+            $table->foreignIdFor(Encuesta::class)->constrained()->onDelete('cascade')->onUpdate('cascade');
+            $table->unsignedSmallInteger('indice_satisfaccion')->nullable();//No se usa
             $table->string('comentarios')->nullable();
             $table->timestamps();
         });

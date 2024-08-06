@@ -6,12 +6,11 @@ use App\Models\Encuesta;
 use App\Models\Pregunta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PreguntaController extends Controller
 {
-   
+
     /**
      * Actualiza y a la vez almacena nuevas preguntas de una encuesta dada
      * 
@@ -25,31 +24,45 @@ class PreguntaController extends Controller
             DB::beginTransaction();
 
             foreach ($request->json() as $preguntaData) {
+                if (isset($preguntaData['id'])) {
+                    // se asume que las preguntas nuevas no tendrán un campo 'id', si tiene, se actualizan
+                    // se asume que algunos atributos pueden no estar, se filtrar los datos nulos
+                    $validator = Validator::make($preguntaData, [
+                        'id_orden' => 'integer',
+                        'titulo_pregunta' => 'string',
+                        'tipo_pregunta' => 'string',
+                        'rango_puntuacion' => 'array',
+                        'seleccion' => 'array',
+                        'es_obligatoria' => 'boolean',
+                    ]);
+                    if ($validator->fails()) {
+                        return response()->json(['error' => $validator->errors()], 400);
+                    }
+                    $updateData = array_filter([
+                        'id_orden' => $preguntaData['id_orden'] ?? null,
+                        'titulo_pregunta' => $preguntaData['titulo_pregunta'] ?? null,
+                        'tipo_pregunta' => $preguntaData['tipo_pregunta'] ?? null,
+                        'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
+                        'seleccion' => $preguntaData['seleccion'] ?? null,
+                        'es_obligatoria' => $preguntaData['es_obligatoria'] ?? null,
+                    ], function ($value) {
+                        return !is_null($value);
+                    });
 
-                $validator = Validator::make($preguntaData, [
+                    Pregunta::where('id', $preguntaData['id'])->update($updateData);
+
+                } else {
+                    $validator = Validator::make($preguntaData, [
                         'id_orden' => 'required|integer',
                         'titulo_pregunta' => 'required|string',
                         'tipo_pregunta' => 'required|string',
-                        'seleccion' => 'nullable|array',
                         'rango_puntuacion' => 'nullable|array',
-                        'es_obligatoria' => 'boolean'
-                        // '*.opciones' => ['array', 'required_if:*.tipo_pregunta,3'], // Opcionalmente requerido solo si el tipo es "multiple choice"
+                        'seleccion' => 'nullable|array',
+                        'es_obligatoria' => 'required|boolean',
                     ]);
-                if ($validator->fails()) {
-                    return response()->json(['error' => $validator->errors()], 400);
-                }
-                if (isset($preguntaData['id']) && $preguntaData['id'] !== null) {
-                // se asume que las preguntas nuevas no tendrán un ID asignado, si tiene, se actualizan
-                    Pregunta::where('id', $preguntaData['id'])
-                        ->update([
-                            'id_orden' => $preguntaData['id_orden'],
-                            'titulo_pregunta' => $preguntaData['titulo_pregunta'],
-                            'tipo_pregunta' => $preguntaData['tipo_pregunta'],
-                            'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
-                            'seleccion' => $preguntaData['seleccion'] ?? null,
-                            'es_obligatoria' => $preguntaData['es_obligatoria'] ?? false
-                        ]);
-                } else {
+                    if ($validator->fails()) {
+                        return response()->json(['error' => $validator->errors()], 400);
+                    }
                     $pregunta = new Pregunta([
                         'encuesta_id' => $encuestaId,
                         'id_orden' => $preguntaData['id_orden'],
@@ -57,24 +70,27 @@ class PreguntaController extends Controller
                         'tipo_pregunta' => $preguntaData['tipo_pregunta'],
                         'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
                         'seleccion' => $preguntaData['seleccion'] ?? null,
-                        'es_obligatoria' => $preguntaData['es_obligatoria'] ?? false
+                        'es_obligatoria' => $preguntaData['es_obligatoria'] ?? false,
                     ]);
                     $pregunta->save();
                 }
             }
+            //La fecha 'updated_at' de encuesta se actualiza con la modificación de alguna pregunta
+            Encuesta::where('id', $encuestaId)->update(['id' => $encuestaId]);
+            
             // Confirmar la transacción si todo ha ido bien
             DB::commit();
 
-            return response()->json(['message' => 'Se guardaron las preguntas'], 201);
+            return response()->json(['success' => 'Se guardaron las preguntas'], 201);
+        
+        } catch (\Throwable $th) {
 
-        } catch (\Exception $e) {
             // Deshacer la transacción en caso de error
             DB::rollBack();
-            Log::error('Error en el método store', ['exception' => $e]); // Agrega este log para depuración
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error ' => $th->getMessage()], 500);
         }
     }
-    
+
     /**
      * Mostrar todas las preguntas de una encuesta (Vista del encuestado / o  Vista del editor de encuestas?) 
      * (Formulario para Respuesta@create )
@@ -114,9 +130,8 @@ class PreguntaController extends Controller
             return response()->json(['message' => 'Pregunta eliminada con éxito', 'encuestaId' => $encuestaId], 200);
             // Redirigir a la lista actualizada de preguntas correspondientes a la encuesta
             // session(['encuestaId' => $encuestaId]);
-            } 
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json(['error' => $e], 500);
         }
-    }//revisar la petición desde el front antes de modificar: borrar multiples preguntas 
+    } //revisar la petición desde el front antes de modificar: borrar multiples preguntas 
 }

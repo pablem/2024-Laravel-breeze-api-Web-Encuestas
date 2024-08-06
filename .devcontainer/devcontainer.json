@@ -1,7 +1,7 @@
 // https://aka.ms/devcontainer.json
 {
     "name": "Existing Docker Compose (Extend)",
-    "dockerComposeFile": ["../../docker-compose.yml"],
+    "dockerComposeFile": ["../docker-compose.yml"],
     "service": "laravel.test",
     "workspaceFolder": "/var/www/html",
     "customizations": {
@@ -18,7 +18,13 @@
         }
     },
     "remoteUser": "sail",
-    "postCreateCommand": "chown -R 1000:1000 /var/www/html 2>/dev/null || true ; composer install && php artisan key:generate && php artisan migrate:fresh --seed && php artisan serve"
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {
+            "ppa": true,
+            "version": "os-provided"
+        }
+    },
+    "postCreateCommand": "chown -R 1000:1000 /var/www/html 2>/dev/null || true ; composer install && php artisan key:generate && php artisan migrate --seed"
     // "forwardPorts": [],
     // "runServices": [],
     // "shutdownAction": "none",

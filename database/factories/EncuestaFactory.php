@@ -31,6 +31,7 @@ class EncuestaFactory extends Factory
             'es_privada' => fake()->numberBetween(0, 1),
             'es_anonima' => fake()->numberBetween(0, 1),
             'version' => 1,
+            'limite_respuestas' => fake()->numberBetween(0,100),
             'created_at' => now(),
             'updated_at' => now(),
         ];

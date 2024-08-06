@@ -6,6 +6,7 @@ use App\Enums\EstadoEncuesta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
 
 class Encuesta extends Model
@@ -62,20 +63,40 @@ class Encuesta extends Model
     }
 
     /**
-     * Obtiene el número de preguntas
+     * Obtiene: preguntas / miembros privados / feedback asociados a la encuesta
      */
-    public function numeroPreguntas()
+    public function preguntas(): HasMany
     {
-        return $this->hasMany(Pregunta::class);
+        return $this->hasMany(Pregunta::class, 'encuesta_id', 'id');
+    }
+    public function miembroEncuestaPrivadas(): HasMany
+    {
+        return $this->hasMany(MiembroEncuestaPrivada::class, 'encuesta_id', 'id');
+    }
+    public function feedbackEncuesta(): HasMany
+    {
+        return $this->hasMany(Feedback_encuesta::class, 'encuesta_id', 'id');
+    }
+
+    /**
+     * Verifica si el correo es miembro de la encuesta privada 
+     */
+    public function esMiembro(string $email): bool
+    {
+        return $this->hasMany(MiembroEncuestaPrivada::class, 'encuesta_id', 'id')
+            ->whereHas('encuestado', function ($query) use ($email) {
+                $query->where('correo', $email);
+            })
+            ->exists();
     }
 
     /**
      * Verifica si la encuesta está finalizada
      */
-    public function es_finalizada(): bool
+    public function esFinalizada(): bool
     {
         if (!$this->fecha_finalizacion) {
-            return false; 
+            return false;
         }
 
         return $this->fecha_finalizacion <= now();
@@ -84,25 +105,35 @@ class Encuesta extends Model
     /**
      * Calcula los días que lleva publicada la encuesta
      */
-    public function dias_publicada(): int
-    {
-        if (!$this->fecha_publicacion) {
-            return 0; 
-        }
+    // public function diasPublicada(): int
+    // {
+    //     if (!$this->fecha_publicacion) {
+    //         return 0;
+    //     }
 
-        return $this->fecha_publicacion->diffInDays(now());
-    }
+    //     return $this->fecha_publicacion->diffInDays(now());
+    // }
 
     /**
      * Calcula los días restantes para la fecha de finalización de la encuesta
      */
-    public function dias_restantes(): ?int
+    public function diasRestantes(): ?int
     {
         if (!$this->fecha_finalizacion) {
-            return null; 
+            return null;
         }
+        $diasRestantes = now()->diffInDays($this->fecha_finalizacion, false);
+        return $diasRestantes >= 0 ? $diasRestantes : null;
+    }
 
-        return now()->diffInDays($this->fecha_finalizacion, false); 
+    /**
+     * Devuelve número de encuestados que han respondido a una encuesta
+     */
+    public function numeroRespuestas(): int
+    {
+        return $this->hasManyThrough(Respuesta::class, Pregunta::class)
+            ->distinct('encuestado_id')
+            ->count('encuestado_id');
     }
 
     /**

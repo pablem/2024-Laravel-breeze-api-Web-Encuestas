@@ -14,8 +14,7 @@ class StoreUserRequest extends FormRequest
     public function authorize(): bool
     {
         //return Auth::user() && Auth::user()->role === UserRole::Administrador->value;
-
-        return true; // Ajusta esto según tus necesidades de autorización
+        return true;
     }
 
     /**
@@ -27,8 +26,8 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'email' => ['required', 'email', 'max:255', Rule::unique(User::class)],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'string', Rule::in([UserRole::Administrador->value, UserRole::Editor->value, UserRole::Publicador->value])],
         ];
     }

@@ -14,6 +14,7 @@
     ```bash
     composer install
     ```
+    ***Si php y Composer se instalan por primera vez, necesita modificar el archivo php.ini dentro de la carpeta de instalación de php y descomentar la línea 941 'extension=fileinfo'***
 
 3. **Configura el Archivo de Entorno:**
     - Copia `.env.example` a `.env` y escribe tu contraseña de postgres 

@@ -6,24 +6,21 @@ use App\Models\Encuestado;
 use App\Models\MiembroEncuestaPrivada;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class MiembroEncuestaPrivadaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display the specified resource.
+     * @param  int $encuestaId
      */
-    public function index()
+    public function getMiembrosIds($encuestaId)
     {
-        //sin uso
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //sin uso
+        try {
+            $miembros = MiembroEncuestaPrivada::where('encuesta_id', $encuestaId)->pluck('encuestado_id')->toArray();
+            return response()->json($miembros, 200);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -32,70 +29,58 @@ class MiembroEncuestaPrivadaController extends Controller
      * 
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $encuestaId
-     * 
      */
     public function store(Request $request, $encuestaId)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                '*.id' => 'nullable',
-                '*.correo' => 'required|email|unique:encuestados,correo',
-            ]);
-            if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors()], 400);
-            }
+            $contadorNuevosMiembros = 0;
             DB::beginTransaction();
             foreach ($request->json()->all() as $encuestadoData) {
-                //     $validator = Validator::make($encuestadoId, [
-                //         //
-                //     ]);
-                // if ($validator->fails()) {
-                //     return response()->json(['error' => $validator->errors()], 400);
-                // }
-                if (isset($encuestadoData['id']) && $encuestadoData['id']) {
-                    $encuestadoId = $encuestadoData['id'];
 
-                    $exists = MiembroEncuestaPrivada::where('encuesta_id', $encuestaId)
+                $encuestadoId = isset($encuestadoData['id'])
+                    ? $encuestadoData['id']
+                    : Encuestado::where('correo', $encuestadoData['correo'])->pluck('id')->first();
+                if (!$encuestadoId) {
+                    continue;
+                }
+                $exists = MiembroEncuestaPrivada::where('encuesta_id', $encuestaId)
                     ->where('encuestado_id', $encuestadoId)
                     ->exists();
-
-                    if ($exists) {
-                        return response()->json(['error' => "El encuestado ya se agregó al grupo privado"], 400);
+                if (!$exists) {
+                    $nuevoMiembro = new MiembroEncuestaPrivada([
+                        'encuesta_id' => $encuestaId,
+                        'encuestado_id' => $encuestadoId
+                    ]);
+                    if ($nuevoMiembro->save()) {
+                        $contadorNuevosMiembros++;
                     }
-
-                } else {
-                    // Si el encuestado no tiene id, verificar si el correo existe
-                    $encuestado = Encuestado::where('correo', $encuestadoData['correo'])->first();
-                    if (!$encuestado) {
-                        // Crear nuevo encuestado
-                        $encuestado = new Encuestado([
-                            'correo' => $encuestadoData['correo']
-                        ]);
-                        $encuestado->save();
-                    }
-                    $encuestadoId = $encuestado->id;
                 }
-                
-                $nuevoMiembro = new MiembroEncuestaPrivada([
-                    'encuesta_id' => $encuestaId,
-                    'encuestado_id' => $encuestadoId
-                ]);
-                $nuevoMiembro->save();
             }
-
             DB::commit();
-            return response()->json(['success' => 'Se guardaron los destinatarios de esta encuesta privada'], 201);
+            return response()->json(['message' => 'Miembros privados agregados: ' . $contadorNuevosMiembros], 201);
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
+            DB::rollBack();
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 
     /**
-     * Display the specified resource.
+     * Remove the specified resource from storage.
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $encuestaId
      */
-    public function show(MiembroEncuestaPrivada $miembroEncuestaPrivada)
+    public function destroy(Request $request, $encuestaId)
     {
-        //
+        try {
+            DB::beginTransaction();
+            $ids = $request->json()->all();
+            $deleted = MiembroEncuestaPrivada::where('encuesta_id', $encuestaId)->whereIn('encuestado_id', $ids)->delete();
+            DB::commit();
+            return response()->json(['message' => 'Miembros privados removidos: ' . $deleted], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -110,14 +95,6 @@ class MiembroEncuestaPrivadaController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, MiembroEncuestaPrivada $miembroEncuestaPrivada)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(MiembroEncuestaPrivada $miembroEncuestaPrivada)
     {
         //
     }

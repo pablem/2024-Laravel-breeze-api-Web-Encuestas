@@ -8,7 +8,6 @@ use App\Http\Controllers\MiembroEncuestaPrivadaController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RespuestaController;
 use App\Http\Controllers\UserController;
-use App\Models\Encuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
@@ -51,19 +50,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/encuestas/{encuestaId}/finalizar',[EncuestaController::class, 'finalizar']);
     //Encuestados
     Route::get('/encuestados_con_correo', [EncuestadoController::class, 'getEncuestadosConCorreo']);
-    Route::get('/encuestas/{encuestaId}/encuestados_sin_responder', [EncuestadoController::class, 'getEncuestadosSinResponder']);
-    Route::get('/encuestados_privados/{encuestaId}', [EncuestadoController::class, 'getEncuestadosPrivados']);
+    Route::get('/encuestados_sin_responder/{encuestaId}', [EncuestadoController::class, 'getEncuestadosSinResponder']);
     Route::post('/encuestados',[EncuestadoController::class, 'store']);
-    Route::put('/encuestados/{id}', [EncuestadoController::class, 'update']);
+    Route::delete('/encuestados', [EncuestadoController::class, 'destroy']);
     //Miembros de una encuesta privada
+    Route::get('/miembros_privados/{encuestaId}',[MiembroEncuestaPrivadaController::class, 'getMiembrosIds']);
+    Route::delete('/miembros_privados/{encuestaId}',[MiembroEncuestaPrivadaController::class, 'destroy']);
     Route::post('/miembros_privados/{encuestaId}',[MiembroEncuestaPrivadaController::class, 'store']);
     //Feedback de encuestas piloto
     Route::get('/encuestas/{encuestaId}/feedback',[EncuestaController::class, 'getFeedbacks']);
     //Enviar emails
     Route::post('/encuestas/{encuestaId}/enviar_correos', [MailController::class, 'enviarCorreos']);
 });
-Route::delete('/encuestados', [EncuestadoController::class, 'destroy']);
-
 
 //Acceso: sólo editor, admin? y super (no publicador)
 Route::middleware(['auth:sanctum', 'role:Administrador,Editor'])->group(function () {
@@ -88,7 +86,7 @@ Route::post('/encuestas/{encuestaId}/responder',[RespuestaController::class, 'st
 Route::get('/encuestas/{encuestaId}/informe',[InformeController::class, 'show']);
 Route::get('/encuestas/{encuestaId}/informe_csv',[InformeController::class, 'downloadCsv']);
 Route::get('/encuestas/{encuestaId}/informe_pdf',[InformeController::class, 'downloadPdf']);
-
+//Imprimir Encuesta 
 Route::get('/encuestas/{encuestaId}/pdf',[InformeController::class, 'downloadSurveyPdf']);
 
 //Probando el proveedor (Mailtrap) con un texto plano

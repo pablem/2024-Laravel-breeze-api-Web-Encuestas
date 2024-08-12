@@ -59,6 +59,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/miembros_privados/{encuestaId}',[MiembroEncuestaPrivadaController::class, 'store']);
     //Feedback de encuestas piloto
     Route::get('/encuestas/{encuestaId}/feedback',[EncuestaController::class, 'getFeedbacks']);
+    Route::get('/preguntas/{preguntaId}/lista_texto',[EncuestaController::class, 'getTextResponse']);
     //Enviar emails
     Route::post('/encuestas/{encuestaId}/enviar_correos', [MailController::class, 'enviarCorreos']);
 });

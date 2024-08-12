@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\EstadoEncuesta;
+use App\Enums\TipoPregunta;
 use App\Mail\CompartirUrlEncuestaMailable;
 use App\Models\Encuesta;
 use App\Models\Encuestado;
 use App\Models\Feedback_encuesta;
 use App\Models\MiembroEncuestaPrivada;
+use App\Models\Pregunta;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -225,19 +227,46 @@ class EncuestaController extends Controller
      */
     public function getFeedbacks($encuestaId)
     {
-        $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta']);
-        if (!$encuesta) {
-            return response()->json(['error' => 'Encuesta no encontrada'], 404);
+        $encuesta = Encuesta::select('id', 'titulo_encuesta', 'estado')->find($encuestaId);
+        if (!$encuesta || $encuesta->estado !== EstadoEncuesta::Piloto) { 
+            return response()->json(['error' => 'Encuesta no encontrada o no es piloto'], 404);
         }
 
-        $feedbacks = Feedback_encuesta::where('encuesta_id', $encuestaId)->orderBy('created_at')->get();
-
-        if ($feedbacks->isEmpty()) {
-            return response()->json(['message' => 'No hay feedback disponible para esta encuesta'], 200);
-        }
+        $entradas = Feedback_encuesta::select('id', 'comentarios as entrada_texto', 'created_at')
+            ->where('encuesta_id', $encuestaId)
+            ->whereNotNull('comentarios')
+            ->orderBy('created_at')
+            // ->limit(100)
+            ->get();
+        $feedbacks = [
+            'titulo' => $encuesta->titulo_encuesta,
+            'entradas' => $entradas
+        ];
 
         return response()->json($feedbacks, 200);
     }
+
+    public function getTextResponse($preguntaId)
+    {
+        $pregunta = Pregunta::select('id', 'titulo_pregunta', 'tipo_pregunta')->find($preguntaId);
+        if (!$pregunta || $pregunta->tipo_pregunta !== TipoPregunta::Text) {
+            return response()->json(['error' => 'Pregunta no encontrada o no es del tipo respuesta de texto.'], 404);
+        }
+
+        $entradas = Respuesta::select('id', 'entrada_texto', 'created_at')
+            ->where('pregunta_id', $preguntaId)
+            ->whereNotNull('entrada_texto')
+            ->orderBy('created_at')
+            // ->limit(100)
+            ->get();
+        $respuestas = [
+            'titulo' => $pregunta->titulo_pregunta,
+            'entradas' => $entradas
+        ];
+
+        return response()->json($respuestas, 200);
+    }
+
 
     /**
      * Muestra una encuesta a partir de la url amigable (slug)

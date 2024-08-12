@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Encuesta::class)->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->unsignedSmallInteger('indice_satisfaccion')->nullable();//No se usa
-            $table->string('comentarios')->nullable();
+            $table->text('comentarios')->nullable();
             $table->timestamps();
         });
     }

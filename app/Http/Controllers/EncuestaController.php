@@ -315,7 +315,7 @@ class EncuestaController extends Controller
                 if ($verificacion) {
                     return $verificacion;
                 }
-                //ANONIMA Pasó las verificaciones. Se registra el correo y se envía invitación para responder desde correo verificado
+                //No ANONIMA Pasó las verificaciones. Se registra el correo y se envía invitación para responder desde correo verificado
                 return $this->nuevoEncuestadoEnviar($encuesta, $correo);
             }
         } catch (\Throwable $th) {
@@ -345,7 +345,7 @@ class EncuestaController extends Controller
 
             $verificacion = $this->verificarEncuesta($encuesta, $correo);
 
-            return $verificacion ? $verificacion : response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta]);
+            return $verificacion ? $verificacion : response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta, 'correo' => $correo]);
         } catch (\Throwable $th) {
             return response()->json(['code' => 'ERROR_SERVIDOR', 'message' => $th->getMessage()]);
         }
@@ -382,7 +382,7 @@ class EncuestaController extends Controller
             return null;
         }
         if ($encuesta->es_privada && !$encuesta->esMiembro($correo)) {
-            return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 403);
+            return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 403);//200
         }
         $respuestaExistente = $this->verificarRespuestaExistente($encuesta, ['correo' => $correo]);
         if ($respuestaExistente) {
@@ -438,7 +438,7 @@ class EncuestaController extends Controller
         }
 
         // Retornar respuesta exitosa
-        return response()->json(['code' => 'NUEVO_ENCUESTADO', 'message' => 'Se envió la encuesta privada a su correo para que la pueda responder.'], 200);
+        return response()->json(['code' => 'NUEVO_ENCUESTADO', 'message' => 'Se envió la encuesta a su correo.'], 200);
     }
     /************ FIN VERIFICACIONES */
 

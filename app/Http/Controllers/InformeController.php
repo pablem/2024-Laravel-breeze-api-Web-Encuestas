@@ -417,7 +417,7 @@ class InformeController extends Controller
         try {
             $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'descripcion']);
             if (!$encuesta) {
-                return response()->json(['error' => 'Encuesta no encontrada'], 404);
+                return response()->json(['message' => 'Encuesta no encontrada'], 404);
             }
 
             $preguntas = Pregunta::where('encuesta_id', $encuestaId)->orderBy('id_orden')->get();

@@ -8,10 +8,10 @@ use App\Mail\CompartirUrlEncuestaMailable;
 use App\Models\Encuesta;
 use App\Models\Encuestado;
 use App\Models\Feedback_encuesta;
-use App\Models\MiembroEncuestaPrivada;
 use App\Models\Pregunta;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -57,7 +57,7 @@ class EncuestaController extends Controller
             $encuesta = Encuesta::create($request->all());
             return response()->json($encuesta, 201);
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 
@@ -130,7 +130,7 @@ class EncuestaController extends Controller
         try {
             $encuesta = Encuesta::find($encuestaId);
             $borrador = new Encuesta([
-                'user_id' => $encuesta->user_id, // borrar a la hora de implementar el frontend  
+                'user_id' => Auth::user()->id,
                 'id_versionamiento' => $encuesta->id_versionamiento,
                 'titulo_encuesta' => $encuesta->titulo_encuesta, // . ' version ' . ($encuesta->version + 1),
                 'descripcion' => $encuesta->descripcion,
@@ -140,7 +140,7 @@ class EncuestaController extends Controller
             $borrador->save();
             return response()->json($borrador, 201);
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 
@@ -183,7 +183,6 @@ class EncuestaController extends Controller
             $slug = Str::slug($encuesta->titulo_encuesta) . '-' . $encuesta->version;
             $encuesta->update([
                 'url' => config('app.frontend_url') . '/encuesta/publicada/' . $slug, //local: http://localhost:5173/encuesta/publicada/titulo-encuesta-1
-                // 'url' => 'http://localhost:5173/encuesta/' . $slug, 
                 'estado' => $request['estado'],
                 'fecha_publicacion' => $request->fecha_publicacion ?? null,
                 'fecha_finalizacion' => $request->fecha_finalizacion ?? null,
@@ -191,9 +190,9 @@ class EncuestaController extends Controller
                 'es_privada' => $request->es_privada,
                 'es_anonima' => $request->es_anonima,
             ]);
-            return response()->json($encuesta, 200);
+            return response()->json(['message' => 'Encuesta Publicada: Se guardaron los cambios.'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 
@@ -215,7 +214,7 @@ class EncuestaController extends Controller
 
             return response()->json(['message' => 'Encuesta marcada como finalizada correctamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 

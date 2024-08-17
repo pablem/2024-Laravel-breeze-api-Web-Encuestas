@@ -12,6 +12,7 @@ use App\Models\Pregunta;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -127,19 +128,36 @@ class EncuestaController extends Controller
      */
     public function nuevaVersion($encuestaId)
     {
+        DB::beginTransaction();
         try {
             $encuesta = Encuesta::find($encuestaId);
+            if (!$encuesta) {
+                return response()->json(['error' => 'Encuesta no encontrada'], 404);
+            }
+
             $borrador = new Encuesta([
                 'user_id' => Auth::user()->id,
                 'id_versionamiento' => $encuesta->id_versionamiento,
                 'titulo_encuesta' => $encuesta->titulo_encuesta, // . ' version ' . ($encuesta->version + 1),
                 'descripcion' => $encuesta->descripcion,
                 'estado' => EstadoEncuesta::Borrador->value,
-                'version' => $encuesta->version + 1,
+                'version' => $encuesta->ultimaVersion() + 1,
             ]);
             $borrador->save();
+
+            $preguntas = Pregunta::where('encuesta_id', $encuestaId)->get();
+            if ($preguntas->isNotEmpty()) {
+                foreach ($preguntas as $pregunta) {
+                    $nuevaPregunta = $pregunta->replicate(); 
+                    $nuevaPregunta->encuesta_id = $borrador->id;
+                    $nuevaPregunta->save();
+                }
+            }
+            DB::commit();
             return response()->json($borrador, 201);
+            
         } catch (\Throwable $th) {
+            DB::rollBack();
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
@@ -381,7 +399,7 @@ class EncuestaController extends Controller
             return null;
         }
         if ($encuesta->es_privada && !$encuesta->esMiembro($correo)) {
-            return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 403);//200
+            return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 200);//403
         }
         $respuestaExistente = $this->verificarRespuestaExistente($encuesta, ['correo' => $correo]);
         if ($respuestaExistente) {

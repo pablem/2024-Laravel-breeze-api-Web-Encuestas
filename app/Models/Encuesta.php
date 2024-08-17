@@ -137,6 +137,14 @@ class Encuesta extends Model
     }
 
     /**
+     * Devuelve la última versión
+     */
+    public function ultimaVersion(): int
+    {
+        return self::where('id_versionamiento', $this->id_versionamiento)
+            ->max('version');
+    }
+    /**
      * Verifica si esta encuesta es la última versión del id_versionamiento
      */
     // public function es_ultima_version(): bool

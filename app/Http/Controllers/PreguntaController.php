@@ -119,7 +119,7 @@ class PreguntaController extends Controller
     public function destroy($preguntaId)
     {
         try {
-            $pregunta = Pregunta::findOrFail($preguntaId);
+            $pregunta = Pregunta::find($preguntaId);
             if (!$pregunta) {
                 return response()->json(['error' => 'Pregunta no encontrada'], 404);
             }

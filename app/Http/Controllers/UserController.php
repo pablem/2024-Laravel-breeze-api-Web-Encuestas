@@ -82,7 +82,7 @@ class UserController extends Controller
     public function show($userId)
     {
         try {
-            $usuario = User::findOrFail($userId);
+            $usuario = User::find($userId);
             if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
@@ -99,7 +99,7 @@ class UserController extends Controller
     public function update(ProfileUpdateRequest $request, $userId)
     {
         try {
-            $usuario = User::findOrFail($userId);
+            $usuario = User::find($userId);
             if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
@@ -135,7 +135,7 @@ class UserController extends Controller
     public function destroy($userId)
     {
         try {
-            $usuario = User::findOrFail($userId);
+            $usuario = User::find($userId);
             if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }

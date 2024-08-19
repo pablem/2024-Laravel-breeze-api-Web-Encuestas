@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class EncuestaController extends Controller
 {
@@ -36,14 +37,6 @@ class EncuestaController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        // frontend
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -53,7 +46,7 @@ class EncuestaController extends Controller
                 'titulo_encuesta' => 'required|string|max:100|unique:encuestas,titulo_encuesta',
             ]);
             if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors()], 400);
+                return response()->json(['errors' => $validator->errors()], 422);
             }
             $encuesta = Encuesta::create($request->all());
             return response()->json($encuesta, 201);
@@ -73,10 +66,8 @@ class EncuestaController extends Controller
         if (is_null($encuesta)) {
             return response()->json(['error' => 'Encuesta no encontrada'], 404);
         }
-        // if ($encuesta->estado === EstadoEncuesta::Borrador->value) {
-        //     return response()->json($encuesta, 200);
-        // } else {
-        //     return response()->json(['error' => 'No se puede editar la encuesta. No es "Borrador".'], 403);
+        // if ($encuesta->estado !== EstadoEncuesta::Borrador) {
+        //     return response()->json(['error' => 'No se puede editar la encuesta. No es "Borrador".'], 400);
         // }
         return response()->json($encuesta, 200);
     }
@@ -94,11 +85,9 @@ class EncuestaController extends Controller
         if (!$encuesta) {
             return response()->json(['error' => 'Encuesta no encontrada'], 404);
         }
-        $validator = Validator::make($request->all(), [
-            'titulo_encuesta' => 'required|string|max:100',
-        ]);
+        $validator = Validator::make($request->all(), ['titulo_encuesta' => ['required', 'string', 'max:100', Rule::unique('encuestas')->ignore($encuestaId)],]);
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
+            return response()->json(['errors' => $validator->errors()], 422);
         }
         $encuesta->update($request->all());
         return response()->json($encuesta, 200);
@@ -134,28 +123,27 @@ class EncuestaController extends Controller
             if (!$encuesta) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
-
+            $ultimaVersion = $encuesta->ultimaVersion();
             $borrador = new Encuesta([
                 'user_id' => Auth::user()->id,
                 'id_versionamiento' => $encuesta->id_versionamiento,
-                'titulo_encuesta' => $encuesta->titulo_encuesta, // . ' version ' . ($encuesta->version + 1),
+                'titulo_encuesta' => $encuesta->titulo_encuesta . ' (' . ($ultimaVersion + 1) . ')',
                 'descripcion' => $encuesta->descripcion,
                 'estado' => EstadoEncuesta::Borrador->value,
-                'version' => $encuesta->ultimaVersion() + 1,
+                'version' => $ultimaVersion + 1,
             ]);
             $borrador->save();
 
             $preguntas = Pregunta::where('encuesta_id', $encuestaId)->get();
             if ($preguntas->isNotEmpty()) {
                 foreach ($preguntas as $pregunta) {
-                    $nuevaPregunta = $pregunta->replicate(); 
+                    $nuevaPregunta = $pregunta->replicate();
                     $nuevaPregunta->encuesta_id = $borrador->id;
                     $nuevaPregunta->save();
                 }
             }
             DB::commit();
             return response()->json($borrador, 201);
-            
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json(['error' => $th->getMessage()], 500);
@@ -163,7 +151,7 @@ class EncuestaController extends Controller
     }
 
     /**
-     * Pasar una encuesta al estado de publicada (o piloto)   
+     * Cambiar propiedades de publicación (Todo tipo de encuestas) 
      * 
      * @param  \Illuminate\Http\Request $request
      * @param  int  $encuestaId
@@ -176,26 +164,13 @@ class EncuestaController extends Controller
             if (!$encuesta) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
-            // $validator = Validator::make($request->all(), [
-            //     'fecha_finalizacion' => 'required',
-            // ]);
-            // if ($validator->fails()) {
-            //     return response()->json(['error' => $validator->errors()], 400);
-            // }
-            // Validación de fecha de finalización
-            if ($request->filled('fecha_finalizacion')) {
-                $fechaFinalizacion = strtotime($request->fecha_finalizacion);
-                if ($fechaFinalizacion === false || $fechaFinalizacion < time()) {
-                    return response()->json(['error' => 'La fecha de finalización no es válida'], 400);
-                }
-            }
-            // Validación de fecha de publicación
-            // pendiente (borrador)
-            if ($request->filled('fecha_publicacion')) {
-                $fechaPublicacion = strtotime($request->fecha_publicacion);
-                if ($fechaPublicacion === false || $fechaPublicacion > time()) {
-                    return response()->json(['error' => 'La fecha de publicación no es válida'], 400);
-                }
+            $validator = Validator::make($request->all(), [
+                'fecha_publicacion' => ['nullable', 'date', 'before_or_equal:now'],
+                'fecha_finalizacion' => ['nullable', 'date', 'after:now'],
+                'limite_respuestas' => ['integer', 'gte:0'],
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
             }
             //Composición de un URL amigable
             $slug = Str::slug($encuesta->titulo_encuesta) . '-' . $encuesta->version;
@@ -245,7 +220,7 @@ class EncuestaController extends Controller
     public function getFeedbacks($encuestaId)
     {
         $encuesta = Encuesta::select('id', 'titulo_encuesta', 'estado')->find($encuestaId);
-        if (!$encuesta || $encuesta->estado !== EstadoEncuesta::Piloto) { 
+        if (!$encuesta || $encuesta->estado !== EstadoEncuesta::Piloto) {
             return response()->json(['error' => 'Encuesta no encontrada o no es piloto'], 404);
         }
 
@@ -325,7 +300,7 @@ class EncuestaController extends Controller
                     'correo' => 'required|email',
                 ]);
                 if ($validator->fails()) {
-                    return response()->json(['code' => 'EMAIL_INVALIDO', 'message' => $validator->errors()->first('correo')], 400);
+                    return response()->json(['code' => 'EMAIL_INVALIDO', 'message' => $validator->errors()->first('correo')], 422);
                 }
                 //NO ANONIMA control con correo no verificado: finalizada? - límite? - ya respondió? - no pertenece a grupo privado?  
                 $verificacion = $this->verificarEncuesta($encuesta, $correo);
@@ -399,7 +374,7 @@ class EncuestaController extends Controller
             return null;
         }
         if ($encuesta->es_privada && !$encuesta->esMiembro($correo)) {
-            return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 200);//403
+            return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 200); //403
         }
         $respuestaExistente = $this->verificarRespuestaExistente($encuesta, ['correo' => $correo]);
         if ($respuestaExistente) {

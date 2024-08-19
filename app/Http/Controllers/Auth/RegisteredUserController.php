@@ -22,7 +22,7 @@ class RegisteredUserController extends Controller
     public function store(Request $request): Response
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:50'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'role' => ['required', 'string'],//, 'in:' . implode(',', [UserRole::Admin, UserRole::Editor, UserRole::Publicador])],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],

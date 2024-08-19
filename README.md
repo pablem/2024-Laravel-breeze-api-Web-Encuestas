@@ -6,6 +6,8 @@
 - Composer
 - Base de datos: PostgreSQL
 
+    ***Si php y Composer se instalan por primera vez, necesita modificar el archivo php.ini dentro de la carpeta de instalación de php y descomentar (quitar el ';') las líneas ';extension=fileinfo' y ';extension=pdo_pgsql' para poder usar composer y Postgres, respectivamente***
+  
 ## Configuración Inicial
 
 1. **Clona el Repositorio:**
@@ -14,7 +16,6 @@
     ```bash
     composer install
     ```
-    ***Si php y Composer se instalan por primera vez, necesita modificar el archivo php.ini dentro de la carpeta de instalación de php y descomentar la línea 941 'extension=fileinfo'***
 
 3. **Configura el Archivo de Entorno:**
     - Copia `.env.example` a `.env` y escribe tu contraseña de postgres 

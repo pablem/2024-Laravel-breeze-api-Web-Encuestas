@@ -1,0 +1,6 @@
+"id","id_versionamiento","user_id","titulo_encuesta","descripcion","url","estado","fecha_publicacion","fecha_finalizacion","es_privada","es_anonima","version","limite_respuestas","created_at","updated_at"
+"42",42,"3","Encuesta Control I  ","","http://localhost:5173/encuesta/publicada/encuesta-control-i-1","publicada","2024-08-19","2025-01-01",False,False,1,0,"2024-08-19 00:00:00","2024-08-19 00:00:00"
+"43",43,"3","Encuesta Control II","","http://localhost:5173/encuesta/publicada/encuesta-control-ii-1","publicada","2024-08-19","2025-01-01",False,False,1,0,"2024-08-19 00:00:00","2024-08-19 00:00:00"
+"44",44,"3","Encuesta Control III","","http://localhost:5173/encuesta/publicada/encuesta-control-iii-1","publicada","2024-08-19","2025-01-01",False,False,1,0,"2024-08-19 00:00:00","2024-08-19 00:00:00"
+"45",45,"3","Encuesta Control IV","","http://localhost:5173/encuesta/publicada/encuesta-control-v-1","publicada","2024-08-19","2025-01-01",False,False,1,0,"2024-08-19 00:00:00","2024-08-19 00:00:00"
+"46",46,"3","Encuesta Control V","","http://localhost:5173/encuesta/publicada/encuesta-control-iv-1","publicada","2024-08-19","2025-01-01",False,False,1,0,"2024-08-19 00:00:00","2024-08-19 00:00:00"

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\EncuestadoController;
 use App\Http\Controllers\InformeController;
@@ -67,6 +68,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/encuestas/{encuestaId}/informe_pdf', [InformeController::class, 'downloadPdf']);
     //Imprimir Encuesta 
     Route::get('/encuestas/{encuestaId}/pdf', [InformeController::class, 'downloadSurveyPdf']);
+    //dashboard
+    Route::get('/dashboard/contadores_encuestas', [DashboardController::class, 'conteoEncuestas']); //dashboard/{idFuncion}
+    Route::get('/dashboard/ratio_respuestas', [DashboardController::class, 'ratioRespuestas']);
+    Route::get('/dashboard/top_respondidas', [DashboardController::class, 'topRespondidas']);
+    Route::get('/dashboard/novedades_encuestas', [DashboardController::class, 'novedadesEncuestas']);
 });
 
 //Acceso: sólo editor, admin? y super (no publicador)

@@ -1,0 +1,11 @@
+"id","encuesta_id","id_orden","titulo_pregunta","tipo_pregunta","seleccion","rango_puntuacion","es_obligatoria","created_at","updated_at"
+"43","42",1,"Pregunta 1 Control I ","text",NULL,NULL,False,NULL,NULL
+"44","42",2,"Pregunta 2 Control I ","text",NULL,NULL,False,NULL,NULL
+"45","43",1,"Pregunta 1 Control II ","text",NULL,NULL,False,NULL,NULL
+"46","43",2,"Pregunta 2 Control II","text",NULL,NULL,False,NULL,NULL
+"47","44",1,"Pregunta 1 Control III","text",NULL,NULL,False,NULL,NULL
+"48","44",2,"Pregunta 2 Control III","text",NULL,NULL,False,NULL,NULL
+"49","45",1,"Pregunta 1 Control IV","text",NULL,NULL,False,NULL,NULL
+"50","45",2,"Pregunta 2 Control IV","text",NULL,NULL,False,NULL,NULL
+"51","46",1,"Pregunta 1 Control V","text",NULL,NULL,False,NULL,NULL
+"52","46",2,"Pregunta 2 Control V","text",NULL,NULL,False,NULL,NULL

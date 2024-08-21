@@ -1,0 +1,7 @@
+//http://localhost:8000/api/dashboard/ratio_respuestas
+{
+    "total_respuestas": 16,
+    "respondidas": 11,
+    "sin_responder": 5,
+    "porcentaje_respondidas": 68.75
+}

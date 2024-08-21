@@ -164,11 +164,17 @@ class EncuestaController extends Controller
             if (!$encuesta) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
-            $validator = Validator::make($request->all(), [
+            // Construcción dinámica de las reglas de validación
+            $rules = [
                 'fecha_publicacion' => ['nullable', 'date', 'before_or_equal:now'],
-                'fecha_finalizacion' => ['nullable', 'date', 'after:now'],
                 'limite_respuestas' => ['integer', 'gte:0'],
-            ]);
+            ];
+            if ($encuesta->estado === EstadoEncuesta::Borrador) {
+                $rules['fecha_finalizacion'] = ['nullable', 'date', 'after:now'];
+            } else {
+                $rules['fecha_finalizacion'] = ['nullable', 'date'];
+            }
+            $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
@@ -177,7 +183,7 @@ class EncuestaController extends Controller
             $encuesta->update([
                 'url' => config('app.frontend_url') . '/encuesta/publicada/' . $slug, //local: http://localhost:5173/encuesta/publicada/titulo-encuesta-1
                 'estado' => $request['estado'],
-                'fecha_publicacion' => $request->fecha_publicacion ?? null,
+                'fecha_publicacion' => $encuesta->estado === EstadoEncuesta::Borrador ? now()->toDateString() : $request->fecha_publicacion ?? null,
                 'fecha_finalizacion' => $request->fecha_finalizacion ?? null,
                 'limite_respuestas' => $request->limite_respuestas ?? null,
                 'es_privada' => $request->es_privada,
@@ -202,7 +208,7 @@ class EncuestaController extends Controller
             if (is_null($encuesta)) {
                 return response()->json(['error' => 'Encuesta no encontrada'], 404);
             }
-            $encuesta->fecha_finalizacion = now();
+            $encuesta->fecha_finalizacion = now()->toDateString();
             $encuesta->save();
 
             return response()->json(['message' => 'Encuesta marcada como finalizada correctamente'], 200);
@@ -259,7 +265,6 @@ class EncuestaController extends Controller
         return response()->json($respuestas, 200);
     }
 
-
     /**
      * Muestra una encuesta a partir de la url amigable (slug)
      * --ENLACE COLECTIVO--
@@ -275,12 +280,12 @@ class EncuestaController extends Controller
             if (!$encuesta) {
                 return response()->json(['code' => 'ENCUESTA_NO_ENCONTRADA', 'message' => 'Encuesta no encontrada'], 404);
             }
+            //Verificación de encuesta: Está finalizada? - limite de respuestas alcanzado? 
+            $verificacion1 = $this->verificarEncuesta($encuesta);
+            if ($verificacion1) {
+                return $verificacion1;
+            }
             if ($encuesta->es_anonima) {
-                //ANONIMA Está finalizada? - limite de respuestas alcanzado? 
-                $verificacion = $this->verificarEncuesta($encuesta);
-                if ($verificacion) {
-                    return $verificacion;
-                }
                 //ANONIMA El encuestado ya respondió?
                 $ip = $request->ip();
                 $respuestaExistente = $this->verificarRespuestaExistente($encuesta, ['ip' => $ip]);
@@ -294,18 +299,11 @@ class EncuestaController extends Controller
                 if (!$request->has('correo')) {
                     return response()->json(['code' => 'ENCUESTA_NO_ANONIMA', 'message' => 'Encuesta no anónima. Debe identificarse con un correo electrónico válido.'], 200);
                 }
+                //NO ANONIMA Verificación de encuesta con correo: correo valido? - ya respondió? - no pertenece a grupo privado?  
                 $correo = $request->input('correo');
-                // Validación del correo
-                $validator = Validator::make(['correo' => $correo], [
-                    'correo' => 'required|email',
-                ]);
-                if ($validator->fails()) {
-                    return response()->json(['code' => 'EMAIL_INVALIDO', 'message' => $validator->errors()->first('correo')], 422);
-                }
-                //NO ANONIMA control con correo no verificado: finalizada? - límite? - ya respondió? - no pertenece a grupo privado?  
-                $verificacion = $this->verificarEncuesta($encuesta, $correo);
-                if ($verificacion) {
-                    return $verificacion;
+                $verificacion2 = $this->verificarCorreo($encuesta, $correo);
+                if ($verificacion2) {
+                    return $verificacion2;
                 }
                 //No ANONIMA Pasó las verificaciones. Se registra el correo y se envía invitación para responder desde correo verificado
                 return $this->nuevoEncuestadoEnviar($encuesta, $correo);
@@ -334,10 +332,12 @@ class EncuestaController extends Controller
             if (!$correo || !hash_equals(sha1($correo), (string) $hash)) {
                 return response()->json(['code' => 'EMAIL_NO_VERIFICADO', 'message' => 'Falló la verificación del correo del encuestado.'], 200); //403
             }
-
-            $verificacion = $this->verificarEncuesta($encuesta, $correo);
-
-            return $verificacion ? $verificacion : response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta, 'correo' => $correo]);
+            $verificacion1 = $this->verificarEncuesta($encuesta);
+            if ($verificacion1) {
+                return $verificacion1;
+            }
+            $verificacion2 = $this->verificarCorreo($encuesta, $correo);
+            return $verificacion2 ? $verificacion2 : response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta, 'correo' => $correo], 200);
         } catch (\Throwable $th) {
             return response()->json(['code' => 'ERROR_SERVIDOR', 'message' => $th->getMessage()]);
         }
@@ -362,7 +362,7 @@ class EncuestaController extends Controller
      * @param string $correo
      * @return \Illuminate\Http\JsonResponse|null
      */
-    private function verificarEncuesta($encuesta, $correo = null)
+    private function verificarEncuesta($encuesta)
     {
         if ($encuesta->esFinalizada()) {
             return response()->json(['code' => 'ENCUESTA_FINALIZADA', 'message' => 'Encuesta finalizada'], 200);
@@ -370,8 +370,24 @@ class EncuestaController extends Controller
         if ($encuesta->limite_respuestas > 0 && $encuesta->numeroRespuestas() >= $encuesta->limite_respuestas) {
             return response()->json(['code' => 'LIMITE_RESPUESTAS_ALCANZADO', 'message' => 'Se ha alcanzado el límite de respuestas para esta encuesta.'], 200);
         }
-        if (!$correo) {
-            return null;
+        return null;
+    }
+
+    /**
+     * Verifica correo: 
+     * encuesta privada - no anónima ya respondida
+     * 
+     * @param  Encuesta  $encuesta
+     * @param string $correo
+     * @return \Illuminate\Http\JsonResponse|null
+     */
+    private function verificarCorreo($encuesta, $correo)
+    {
+        $validator = Validator::make(['correo' => $correo], [
+            'correo' => 'required|email',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['code' => 'EMAIL_INVALIDO', 'message' => $validator->errors()->first('correo')], 422);
         }
         if ($encuesta->es_privada && !$encuesta->esMiembro($correo)) {
             return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'Esta encuesta es privada. Ud. no está autorizado para responder.'], 200); //403
@@ -380,7 +396,6 @@ class EncuestaController extends Controller
         if ($respuestaExistente) {
             return $respuestaExistente;
         }
-
         return null;
     }
     /**

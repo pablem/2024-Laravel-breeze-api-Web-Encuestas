@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Log;
 
 class Encuesta extends Model
@@ -77,6 +78,10 @@ class Encuesta extends Model
     {
         return $this->hasMany(Feedback_encuesta::class, 'encuesta_id', 'id');
     }
+    public function respuestas(): HasManyThrough
+    {
+        return $this->hasManyThrough(Respuesta::class, Pregunta::class);
+    }
 
     /**
      * Verifica si el correo es miembro de la encuesta privada 
@@ -131,9 +136,19 @@ class Encuesta extends Model
      */
     public function numeroRespuestas(): int
     {
-        return $this->hasManyThrough(Respuesta::class, Pregunta::class)
+        return $this->respuestas()
             ->distinct('encuestado_id')
             ->count('encuestado_id');
+    }
+
+    public function respuestasVacias(): array
+    {
+        return $this->respuestas()
+            ->whereNull('puntuacion')
+            ->whereNull('valor_numerico')
+            ->whereNull('entrada_texto')
+            ->whereNull('seleccion')
+            ->get();
     }
 
     /**

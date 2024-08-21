@@ -1,0 +1,2 @@
+"id","id_versionamiento","user_id","titulo_encuesta","descripcion","url","estado","fecha_publicacion","fecha_finalizacion","es_privada","es_anonima","version","limite_respuestas","created_at","updated_at"
+"48",48,"25","Encuesta control de Informes",NULL,"http://localhost:5173/encuesta/publicada/encuesta-control-de-informes-1","publicada","2024-08-21",NULL,False,False,1,0,"2024-08-21 14:36:43","2024-08-21 14:41:19"

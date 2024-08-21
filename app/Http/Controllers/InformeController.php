@@ -20,7 +20,7 @@ class InformeController extends Controller
      * @param  int  $encuestaId
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request, $encuestaId)//, $email = null)
+    public function show(Request $request, $encuestaId) //, $email = null)
     {
         try {
             $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion', 'es_privada']);
@@ -30,16 +30,18 @@ class InformeController extends Controller
             if ($encuesta->es_privada) {
                 // $email = $request->input('correo');
                 if (!Auth::check() && (!$request->has('correo') || !$encuesta->esMiembro($request->input('correo')))) {
-                    return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'No tiene acceso a esta encuesta privada.'], 403);
+                    return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'No tiene acceso a esta encuesta privada.'], 200); //403
                 }
             }
             $informe = $this->generarInforme($encuesta);
             return response()->json($informe, 200);
-
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
+
+    /* Funciones adicionales propuestas : extraer a csv todos los datos de los tipos de preguntas: texto y valor numérico  
+        (ya que en el informe csv se presentan los datos condensados en rangos) */
 
     /**
      * Generar y descargar informe en formato .csv
@@ -61,10 +63,27 @@ class InformeController extends Controller
                 $file = fopen('php://output', 'w');
                 fputcsv($file, ['Titulo Encuesta', $informe['titulo_encuesta']]);
                 fputcsv($file, ['Dias Restantes', $informe['dias_restantes']]);
+                fputcsv($file, ['Numero de Respuestas', $informe['numero_respuestas']]);
                 fputcsv($file, []);
 
                 foreach ($informe['preguntas'] as $pregunta) {
-                    fputcsv($file, [$pregunta['titulo_pregunta']]);
+                    fputcsv($file, ['Titulo', $pregunta['titulo_pregunta']]);
+                    fputcsv($file, ['Tipo', $pregunta['tipo_pregunta']]);
+                    if (isset($pregunta['total_promedio'])) {
+                        fputcsv($file, ['Total Promedio', $pregunta['total_promedio']]);
+                    }
+                    if (isset($pregunta['valor_maximo'])) {
+                        fputcsv($file, ['Valor Máximo', $pregunta['valor_maximo']]);
+                    }
+                    if (isset($pregunta['valor_minimo'])) {
+                        fputcsv($file, ['Valor Mínimo', $pregunta['valor_minimo']]);
+                    }
+                    if (isset($pregunta['varianza'])) {
+                        fputcsv($file, ['Varianza', $pregunta['varianza']]);
+                    }
+                    if (isset($pregunta['desviacion_estandar'])) {
+                        fputcsv($file, ['Desviación Estándar', $pregunta['desviacion_estandar']]);
+                    }
                     fputcsv($file, ['Opcion', 'Resultados', 'Porcentaje']);
                     foreach ($pregunta['resultados'] as $resultado) {
                         fputcsv($file, [$resultado['titulo_opcion'], $resultado['resultado_opcion'], $resultado['porcentaje']]);
@@ -79,7 +98,6 @@ class InformeController extends Controller
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ]);
-
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -114,13 +132,15 @@ class InformeController extends Controller
     {
         $resultado = $encuesta->diasRestantes();
         $diasRestantes = is_null($resultado)
-            ? 'Ya ha finalizado'
+            ? 'No'
             : (string) $encuesta->diasRestantes();
+        $numeroRespuestas = $encuesta->numeroRespuestas();
 
         $informe = [
             'titulo_encuesta' => $encuesta->titulo_encuesta,
             'dias_restantes' => $diasRestantes,
-            'preguntas' => []
+            'numero_respuestas' => $numeroRespuestas,
+            // 'preguntas' => []
         ];
 
         $preguntas = Pregunta::where('encuesta_id', $encuesta->id)->orderBy('id_orden')->get();
@@ -188,10 +208,9 @@ class InformeController extends Controller
                 'resultado_opcion' => $respuestasEnBlanco,
                 'porcentaje' => round($porcentajeBlanco, 2)
             ];
-
             return [
                 'titulo_pregunta' => $pregunta->titulo_pregunta,
-                'total_respuestas' => $totalRespuestas,
+                'tipo_pregunta' => $pregunta->tipo_pregunta->value,
                 'resultados' => $resultadosFormateados
             ];
         } catch (\Throwable $th) {
@@ -248,8 +267,9 @@ class InformeController extends Controller
 
         return [
             'titulo_pregunta' => $pregunta->titulo_pregunta,
-            'total_respuestas' => $totalRespuestas,
+            'tipo_pregunta' => 'puntuación',
             'total_promedio' => round($totalPromedio, 2),
+            'label_total_promedio' => 'Puntuación promedio',
             'resultados' => $resultadosFormateados
         ];
     }
@@ -271,8 +291,9 @@ class InformeController extends Controller
         if (empty($valoresNumericos)) {
             return [
                 'titulo_pregunta' => $pregunta->titulo_pregunta,
-                'total_respuestas' => 0,
+                'tipo_pregunta' => $pregunta->tipo_pregunta->value,
                 'total_promedio' => 0,
+                'label_total_promedio' => 'Valor promedio',
                 'resultados' => []
             ];
         }
@@ -296,11 +317,11 @@ class InformeController extends Controller
         }, $valoresNoNulos));
         $varianza = $numeroNoNulos > 0 ? $sumatoriaDesviacionCuadrada / $numeroNoNulos : 0;
         $varianza = round($varianza, 2);
-        
-        
-        
 
-        
+
+
+
+
         // Desviación estándar (?)
         $desviacionEstandar = round(sqrt($varianza), 2);
 
@@ -339,8 +360,9 @@ class InformeController extends Controller
 
         return [
             'titulo_pregunta' => $pregunta->titulo_pregunta,
-            'total_respuestas' => $totalRespuestas,
+            'tipo_pregunta' => 'valor numérico',
             'total_promedio' => round($promedio, 2),
+            'label_total_promedio' => 'Valor promedio obtenido de todas las respuestas',
             'valor_maximo' => $max,
             'valor_minimo' => $min,
             'varianza' => $varianza,
@@ -357,9 +379,9 @@ class InformeController extends Controller
         $sumaTotalPalabras = 0;
         $totalPromedio = 0;
         $resultados = [
-            'respuesta_corta' => 0,
-            'respuesta_normal' => 0,
-            'respuesta_larga' => 0
+            'Respuestas cortas (-15 palabras)' => 0,
+            'Respuestas medias (-50 palabras)' => 0,
+            'Respuestas largas (+50 palabras)' => 0
         ];
 
         $respuestas = $pregunta->respuestas()->get(['entrada_texto']);
@@ -372,17 +394,17 @@ class InformeController extends Controller
                 $numPalabras = str_word_count($respuesta->entrada_texto);
                 $sumaTotalPalabras += $numPalabras;
                 if ($numPalabras < 15) {
-                    $resultados['respuesta_corta']++;
+                    $resultados['Respuestas cortas (-15 palabras)']++;
                 } elseif ($numPalabras <= 50) {
-                    $resultados['respuesta_normal']++;
+                    $resultados['Respuestas medias (-50 palabras)']++;
                 } else {
-                    $resultados['respuesta_larga']++;
+                    $resultados['Respuestas largas (+50 palabras)']++;
                 }
             }
         }
         $resultadosFormateados = [];
         foreach ($resultados as $tipoRespuesta => $cantidad) {
-            $porcentaje = $totalRespuestas > 0 ? ($cantidad / ($totalRespuestas - $respuestasEnBlanco)) * 100 : 0;
+            $porcentaje = $totalRespuestas > 0 ? ($cantidad / $totalRespuestas) * 100 : 0;
             $resultadosFormateados[] = [
                 'titulo_opcion' => $tipoRespuesta,
                 'resultado_opcion' => $cantidad,
@@ -396,12 +418,13 @@ class InformeController extends Controller
             'porcentaje' => round($porcentajeBlanco, 2)
         ];
 
-        $totalPromedio = $totalRespuestas > 0 ? $sumaTotalPalabras / ($totalRespuestas - $respuestasEnBlanco) : 0;
+        $totalPromedio = $totalRespuestas > 0 && $totalRespuestas !== $respuestasEnBlanco ? $sumaTotalPalabras / ($totalRespuestas - $respuestasEnBlanco) : 0;
 
         return [
             'titulo_pregunta' => $pregunta->titulo_pregunta,
-            'total_respuestas' => $totalRespuestas,
+            'tipo_pregunta' => 'texto libre',
             'total_promedio' => round($totalPromedio, 2),
+            'label_total_promedio' => 'Número de palabras promedio por respuesta',
             'resultados' => $resultadosFormateados
         ];
     }

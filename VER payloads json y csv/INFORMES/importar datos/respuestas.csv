@@ -1,0 +1,31 @@
+"id","pregunta_id","encuestado_id","puntuacion","seleccion","entrada_texto","created_at","updated_at","valor_numerico"
+"88","57","36",NULL,NULL,NULL,NULL,NULL,NULL
+"87","57","35",NULL,NULL,NULL,NULL,NULL,NULL
+"86","57","34",NULL,NULL,NULL,NULL,NULL,NULL
+"85","57","33",10,NULL,NULL,NULL,NULL,NULL
+"84","57","32",10,NULL,NULL,NULL,NULL,NULL
+"83","57","31",10,NULL,NULL,NULL,NULL,NULL
+"82","56","35",NULL,"[5]",NULL,NULL,NULL,NULL
+"81","56","34",NULL,"[4]",NULL,NULL,NULL,NULL
+"80","56","36",NULL,NULL,NULL,NULL,NULL,NULL
+"79","56","33",NULL,"[2]",NULL,NULL,NULL,NULL
+"78","56","32",NULL,"[1]",NULL,NULL,NULL,NULL
+"77","56","31",NULL,"[0]",NULL,NULL,NULL,NULL
+"76","55","36",NULL,NULL,NULL,NULL,NULL,NULL
+"75","55","35",NULL,NULL,NULL,NULL,NULL,NULL
+"74","55","34",NULL,"[2]",NULL,NULL,NULL,NULL
+"73","55","33",NULL,"[2]",NULL,NULL,NULL,NULL
+"72","55","32",NULL,"[1]",NULL,NULL,NULL,NULL
+"71","55","31",NULL,"[0]",NULL,NULL,NULL,NULL
+"70","54","36",NULL,NULL,NULL,NULL,NULL,NULL
+"69","54","35",NULL,"[1]",NULL,NULL,NULL,NULL
+"68","54","34",NULL,NULL,NULL,NULL,NULL,NULL
+"67","54","33",NULL,"[0]",NULL,NULL,NULL,NULL
+"66","54","32",NULL,"[0,1]",NULL,NULL,NULL,NULL
+"65","54","31",NULL,"[0,1,2]",NULL,NULL,NULL,NULL
+"64","53","36",NULL,NULL,NULL,NULL,NULL,NULL
+"63","53","35",NULL,NULL,NULL,NULL,NULL,NULL
+"62","53","34",NULL,NULL,NULL,NULL,NULL,NULL
+"61","53","33",NULL,NULL,"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",NULL,NULL,NULL
+"60","53","32",NULL,NULL,"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",NULL,NULL,NULL
+"59","53","31",NULL,NULL,"Lorem ipsum dolor sit amet.",NULL,NULL,NULL

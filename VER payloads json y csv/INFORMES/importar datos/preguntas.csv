@@ -1,0 +1,7 @@
+"id","encuesta_id","id_orden","titulo_pregunta","tipo_pregunta","seleccion","rango_puntuacion","es_obligatoria","created_at","updated_at"
+"59","48",6,"Pregunta control 6 ""valor numérico""","numeric",NULL,NULL,False,NULL,NULL
+"53","48",1,"Pregunta control 1 ""texto""","text","[]","[]",False,"2024-08-21 14:40:22","2024-08-21 14:40:22"
+"54","48",2,"pregunta control 2 ""seleccion múltiple""","multiple choice","[""juani"",""pablo"",""franco""]","[]",False,"2024-08-21 14:40:22","2024-08-21 14:40:22"
+"55","48",3,"pregunta control 3 ""selección única""","unique choice","[""verdadero"",""falseo"",""meh""]","[]",False,"2024-08-21 14:40:22","2024-08-21 14:40:22"
+"57","48",5,"pregunta control 5 ""puntuación""","rating",NULL,"[1,10,1]",False,"2024-08-21 14:40:22","2024-08-21 14:40:22"
+"56","48",4,"pregunta control 4 ""lista""","list","[""Jujuy"",""Salta"",""Tucum\u00e1n"",""C\u00f3rdoba"",""Santiago del Estero"",""Catamarca"",""San Juan"",""La Rioja""]","[]",False,"2024-08-21 14:40:22","2024-08-21 14:40:22"

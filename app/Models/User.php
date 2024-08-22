@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -46,6 +48,17 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
         'role' => UserRole::class,
     ];
+
+     /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
 
     /**
      * Verifica si el usuario tiene un rol específico.

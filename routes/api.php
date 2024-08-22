@@ -64,8 +64,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //Enviar emails
     Route::post('/encuestas/{encuestaId}/enviar_correos', [MailController::class, 'enviarCorreos']);
     //Informes
-    // Route::get('/encuestas/{encuestaId}/informe_csv', [InformeController::class, 'downloadCsv']);
-    // Route::get('/encuestas/{encuestaId}/informe_pdf', [InformeController::class, 'downloadPdf']);
+    Route::get('/encuestas/{encuestaId}/informe_csv', [InformeController::class, 'downloadCsv']);
+    Route::get('/encuestas/{encuestaId}/informe_pdf', [InformeController::class, 'downloadPdf']);
     //Imprimir Encuesta 
     Route::get('/encuestas/{encuestaId}/pdf', [InformeController::class, 'downloadSurveyPdf']);
     //dashboard
@@ -74,8 +74,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/dashboard/top_respondidas', [DashboardController::class, 'topRespondidas']);
     Route::get('/dashboard/novedades_encuestas', [DashboardController::class, 'novedadesEncuestas']);
 });
-Route::get('/encuestas/{encuestaId}/informe_csv', [InformeController::class, 'downloadCsv']);
-    Route::get('/encuestas/{encuestaId}/informe_pdf', [InformeController::class, 'downloadPdf']);
 
 //Acceso: sólo editor, admin? y super (no publicador)
 Route::middleware(['auth:sanctum', 'role:Administrador,Editor'])->group(function () {

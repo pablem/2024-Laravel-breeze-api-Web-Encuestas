@@ -51,7 +51,7 @@
     php artisan key:generate
     ```
 
-6. **Ejecuta las Migraciones + datos iniciales (mail: usuario@super.com pass:123456)**
+6. **Ejecuta las Migraciones y Seeders:**
 
     Este comando ejecutará las migraciones de base de datos y sembrará datos iniciales, incluyendo un usuario administrador (email: usuario@super.com, password: 123456):
 

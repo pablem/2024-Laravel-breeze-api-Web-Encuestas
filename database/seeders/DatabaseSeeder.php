@@ -16,7 +16,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
         //Se hace una lista de llamadas a los seeders en orden, manteniendo el código de cada seeder desacoplado
             UserSeeder::class,
-            EncuestaSeeder::class
+            EncuestaSeeder::class,
+            PreguntaSeeder::class,
+            EncuestadoSeeder::class,
+            MiembroEncuestaPrivadaSeeder::class,
+            RespuestaSeeder::class,
+            FeedbackEncuestaSeeder::class
         ]);
     }
 }

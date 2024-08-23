@@ -20,20 +20,18 @@ class EncuestaFactory extends Factory
     {
 
         return [
-        'user_id' => User::inRandomOrder()->first()->id, // Asigna un usuario random
-        'id_versionamiento' => 1,
+            'user_id' => User::inRandomOrder()->first()->id, // Asigna un usuario random
+            // 'id_versionamiento' => 1,
             'titulo_encuesta' => fake()->sentence(3),
             'descripcion' => fake()->paragraph(3),
-            'url' => fake()->url,
+            // 'url' => fake()->url,
             'estado' => fake()->randomElement(['piloto', 'publicada', 'borrador']),
             'fecha_publicacion' => fake()->dateTimeBetween('-3 months', 'now'),
             'fecha_finalizacion' => fake()->dateTimeBetween('now', '+3 months'),
-            'es_privada' => fake()->numberBetween(0, 1),
+            // 'es_privada' => fake()->numberBetween(0, 1),
             'es_anonima' => fake()->numberBetween(0, 1),
-            'version' => 1,
+            // 'version' => 1,
             'limite_respuestas' => fake()->numberBetween(0,100),
-            'created_at' => now(),
-            'updated_at' => now(),
         ];
     }
 }

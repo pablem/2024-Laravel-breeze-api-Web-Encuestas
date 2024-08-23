@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Feedback_encuesta extends Model
 {
-    // use HasFactory;
+    use HasFactory;
     protected $fillable = [
         'encuesta_id',
         'indice_satisfaccion',//No se usa

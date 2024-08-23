@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('email')->unique();
             // $table->unsignedSmallInteger('telefono')->nullable();
             // $table->enum('role', ['admin', 'editor', 'publicador']);
-            $table->string('role')->default(UserRole::Administrador->value);
+            $table->string('role')->default(UserRole::Editor->value);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

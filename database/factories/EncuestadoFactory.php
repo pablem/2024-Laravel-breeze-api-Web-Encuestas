@@ -18,6 +18,7 @@ class EncuestadoFactory extends Factory
     {
         return [
             'correo' => fake()->unique()->safeEmail(),
+            'validacion' => 3,
         ];
     }
 }

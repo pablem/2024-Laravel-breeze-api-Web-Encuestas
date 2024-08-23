@@ -17,7 +17,11 @@ class EncuestadoController extends Controller
      */
     public function getEncuestadosConCorreo()
     {
-        $encuestados = Encuestado::select('id', 'correo')->whereNotNull('correo')->get();
+        $encuestados = Encuestado::select('id', 'correo', 'validacion')
+            ->whereNotNull('correo')
+            ->orderBy('validacion', 'desc')
+            ->orderBy('id', 'asc')
+            ->get();
         return response()->json($encuestados, 200);
     }
 
@@ -43,6 +47,7 @@ class EncuestadoController extends Controller
 
             // Construir la consulta para obtener los encuestados que no han respondido
             $query = Encuestado::whereNotNull('correo')
+                ->whereNotNull('validacion')
                 ->whereNotIn('id', $respondidosSubquery);
 
             // Si la encuesta es privada, filtrar solo los miembros de la encuesta privada
@@ -84,6 +89,7 @@ class EncuestadoController extends Controller
                 }
                 $encuestado = new Encuestado([
                     'correo' => $data['correo'],
+                    'validacion' => 0,
                     // 'ip_identificador' => null, //=> $request->ip(),
                 ]);
                 $encuestado->save();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRespuestasRequest;
+use App\Models\Encuesta;
 use App\Models\Encuestado;
 use App\Models\Feedback_encuesta;
 use App\Models\Pregunta;
@@ -24,13 +25,24 @@ class RespuestaController extends Controller
     {
         try {
             DB::beginTransaction();
-
+            $encuesta = Encuesta::select('id','es_anonima')->where('id', $encuestaId)->first();
+            if(!$encuesta) {
+                return response()->json(['message' => 'Encuesta no encontrada'], 404);
+            }
             // Creación y almacenamiento de "encuestado"
-            if ($request->has('correo')) {
-                $encuestado = Encuestado::where('correo', $request->correo)->first();
-                if (!$encuestado) {
-                    $encuestadoData['correo'] = $request->correo;
-                    $encuestado = Encuestado::create($encuestadoData);
+            if(!$encuesta->es_anonima) {
+                if ($request->has('correo')) { //se puede mandar simplemente el id 
+                    $encuestado = Encuestado::where('correo', $request->correo)->first();
+                    if (!$encuestado) {
+                        return response()->json(['message' => 'No se proporcionó un correo válido.'], 403);
+                    } else {
+                        $validacion = $encuestado->validacion !== null ? $encuestado->validacion + 1 : 1;
+                        $encuestado->update([
+                            'validacion' => $validacion,
+                        ]);
+                    }
+                } else {
+                    return response()->json(['message' => 'No se proporcionó ningún correo.'], 403);
                 }
             } else {
                 $ipIdentificador = $request->ip();
@@ -40,7 +52,6 @@ class RespuestaController extends Controller
                     $encuestado = Encuestado::create($encuestadoData);
                 }
             }
-
             // Guardado de las respuestas
             foreach ($request->respuestas as $respuestaData) {
                 $respuesta = new Respuesta([
@@ -50,16 +61,15 @@ class RespuestaController extends Controller
                     'entrada_texto' => $respuestaData['entrada_texto'] ?? null,
                     'seleccion' => $respuestaData['seleccion'] ?? null,
                 ]);
-
+                // HACER ESTO MÁS EFICIENTE
                 //Obtener la pregunta para verificar si es obligatoria
-                $pregunta = Pregunta::select('id', 'es_obligatoria')->find($respuestaData['pregunta_id']);
-                if ($pregunta && $pregunta->es_obligatoria) {
-                    // Validar que la respuesta no está vacía
-                    if ($respuesta->esRespuestaVacia()) {
-                        return response()->json(['error' => 'La pregunta' . $pregunta->id . 'es obligatoria y uno de sus campos debe ser no nulo.'], 400);
-                    }
-                }
-                
+                // $pregunta = Pregunta::select('id', 'es_obligatoria')->find($respuestaData['pregunta_id']);
+                // if ($pregunta && $pregunta->es_obligatoria) {
+                //     // Validar que la respuesta no está vacía
+                //     if ($respuesta->esRespuestaVacia()) {
+                //         return response()->json(['error' => 'La pregunta' . $pregunta->id . 'es obligatoria y uno de sus campos debe ser no nulo.'], 422);
+                //     }
+                // }
                 $respuesta->save();
             }
             //Encuesta PILOTO

@@ -27,7 +27,11 @@ class EncuestaController extends Controller
     {
         $encuestas = Encuesta::with('user:id,name')
             ->select('id', 'titulo_encuesta', 'estado', 'es_anonima', 'es_privada', 'fecha_finalizacion', 'user_id', 'created_at', 'updated_at')
-            ->orderBy('created_at', 'desc')
+            ->addSelect([
+                'tiene_mensajes' => Feedback_encuesta::selectRaw('COUNT(*) > 0')
+                    ->whereColumn('encuesta_id', 'encuestas.id')
+            ])
+            ->orderBy('id', 'desc')
             ->get();
 
         foreach ($encuestas as $encuesta) {

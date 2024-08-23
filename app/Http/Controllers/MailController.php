@@ -101,6 +101,7 @@ class MailController extends Controller
                     }
                     $encuestado = new Encuestado([
                         'correo' => $encuestado['correo'],
+                        'validacion' => 0,
                         // 'ip_identificador' => null, //=> $request->ip(),
                     ]);
                     $encuestado->save();
@@ -123,7 +124,7 @@ class MailController extends Controller
                 return response()->json([
                     // 'message' => 'Correos enviados parcialmente.',
                     'message' => $errores
-                ], 206); // Status 206 Partial Content
+                ], 400); // Status 206 Partial Content
             }
             return response()->json(['message' => 'Todos los correos enviados exitosamente'], 200);
         } catch (\Throwable $e) {

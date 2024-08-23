@@ -16,13 +16,16 @@ class EncuestadoSeeder extends Seeder
         Encuestado::factory(10)->create();
         
         Encuestado::create([
-            'correo' => 'privado1@privado'
+            'correo' => 'privado1@privado',
+            'validacion' => 0
         ]);
         Encuestado::create([
-            'correo' => 'privado2@privado'
+            'correo' => 'privado2@privado',
+            'validacion' => 0
         ]);
         Encuestado::create([
-            'correo' => 'privado3@privado'
+            'correo' => 'privado3@privado',
+            'validacion' => 0
         ]);
     }
 }

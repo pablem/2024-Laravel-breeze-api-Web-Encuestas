@@ -18,6 +18,12 @@ class EncuestaFactory extends Factory
      */
     public function definition(): array
     {
+        $esPrivada = fake()->boolean();
+        $esAnonima = fake()->boolean();
+        if ($esPrivada && $esAnonima) {
+            $esAnonima = false;
+            $esPrivada = false;
+        }
 
         return [
             'user_id' => User::inRandomOrder()->first()->id, // Asigna un usuario random
@@ -28,10 +34,10 @@ class EncuestaFactory extends Factory
             'estado' => fake()->randomElement(['piloto', 'publicada', 'borrador']),
             'fecha_publicacion' => fake()->dateTimeBetween('-3 months', 'now'),
             'fecha_finalizacion' => fake()->dateTimeBetween('now', '+3 months'),
-            // 'es_privada' => fake()->numberBetween(0, 1),
-            'es_anonima' => fake()->numberBetween(0, 1),
+            'es_privada' => $esPrivada,
+            'es_anonima' => $esAnonima,
             // 'version' => 1,
-            'limite_respuestas' => fake()->numberBetween(0,100),
+            'limite_respuestas' => fake()->numberBetween(0, 100),
         ];
     }
 }

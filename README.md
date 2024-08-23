@@ -31,7 +31,10 @@
     ```
 
 4. **Configura el Archivo de Entorno:**
-    - Copia `.env.example` a `.env` y escribe tu contraseña de postgres 
+    - Copia `.env.example` a `.env` y escribe tu contraseña de postgres
+    ```bash
+    cp .env.example .env
+    ```
     - Configura las credenciales de PostgreSQL en el archivo `.env`:
     ```bash
     DB_CONNECTION=pgsql

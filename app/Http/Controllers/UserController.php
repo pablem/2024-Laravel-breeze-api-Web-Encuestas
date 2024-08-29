@@ -20,6 +20,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::select('id', 'name', 'role', 'email', 'email_verified_at', 'created_at')
+            ->whereNot('role','Super')
             ->orderBy('name', 'asc')
             ->get();
 
@@ -86,6 +87,9 @@ class UserController extends Controller
             if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
+            if ($usuario->role === UserRole::Super && Auth::user()->role !== UserRole::Super) {
+                return response()->json(['error' => 'No puede modificar al superusuario'], 403);
+            }
             return response()->json($usuario, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
@@ -103,6 +107,9 @@ class UserController extends Controller
             if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
+            if ($usuario->role === UserRole::Super && Auth::user()->role !== UserRole::Super) {
+                return response()->json(['error' => 'No autorizado para modificar un superusuario'], 403);
+            }    
             if ($request->filled('previous_email_id') && !($usuario->hasRole(UserRole::Super->value) || $usuario->hasRole(UserRole::Administrador->value)) ) {
                 return response()->json(['error' => 'No autorizado para cambiar el rol'], 403);
             }
@@ -137,7 +144,10 @@ class UserController extends Controller
         try {
             $usuario = User::find($userId);
             if (!$usuario) {
-                return response()->json(['error' => 'Usuario no encontrado'], 404);
+                return response()->json(['message' => 'Usuario no encontrado'], 404);
+            }
+            if ($usuario->role === UserRole::Super) {
+                return response()->json(['message' => 'No se puede borrar el superusuario'], 403);
             }
             $usuario->delete();
             return response()->json(['message' => 'Usuario eliminado correctamente'], 200);

@@ -64,7 +64,7 @@ class EncuestaSeeder extends Seeder
         ]);
         // Verifica que haya usuarios antes de crear encuestas
         if (\App\Models\User::count() > 0) {
-            Encuesta::factory(12)->create();
+            Encuesta::factory(6)->create();
         } else {
             $this->command->info('No hay usuarios en la base de datos para asignar a las encuestas.');
         }

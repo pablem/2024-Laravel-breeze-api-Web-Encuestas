@@ -328,13 +328,19 @@ class EncuestaController extends Controller
     public function showByIndividualLink($slug, $encuestadoId, $hash)
     {
         try {
-            $encuesta = $this->obtenerEncuesta($slug);
-            if (!$encuesta) {
-                return response()->json(['code' => 'ENCUESTA_NO_ENCONTRADA', 'message' => 'Encuesta no encontrada']);
-            }
             $correo = Encuestado::where('id', $encuestadoId)->pluck('correo')->first();
             if (!$correo || !hash_equals(sha1($correo), (string) $hash)) {
-                return response()->json(['code' => 'EMAIL_NO_VERIFICADO', 'message' => 'Falló la verificación del correo del encuestado.'], 200); //403
+                return response()->json(['code' => 'EMAIL_NO_VERIFICADO', 'message' => 'Falló la verificación del correo del encuestado.'], 200); //400
+            }
+
+            /* El encuestado accedió desde el correo: Se actualiza su validación */
+            Encuestado::where('correo', $correo)
+                ->whereNull('validacion')
+                ->update(['validacion' => 0]);
+
+            $encuesta = $this->obtenerEncuesta($slug);
+            if (!$encuesta) {
+                return response()->json(['code' => 'ENCUESTA_NO_ENCONTRADA', 'message' => 'Encuesta no encontrada'], 404); //404
             }
             $verificacion1 = $this->verificarEncuesta($encuesta);
             if ($verificacion1) {
@@ -343,7 +349,7 @@ class EncuestaController extends Controller
             $verificacion2 = $this->verificarCorreo($encuesta, $correo);
             return $verificacion2 ? $verificacion2 : response()->json(['code' => 'ENCUESTA_DISPONIBLE', 'encuesta' => $encuesta, 'correo' => $correo], 200);
         } catch (\Throwable $th) {
-            return response()->json(['code' => 'ERROR_SERVIDOR', 'message' => $th->getMessage()]);
+            return response()->json(['code' => 'ERROR_SERVIDOR', 'message' => $th->getMessage()], 500);
         }
     }
     /************ VERIFICACIONES */
@@ -440,16 +446,15 @@ class EncuestaController extends Controller
                 ]);
                 $encuestado->save();
             }
-
             // Enviar el correo
             Mail::to($encuestado->correo)
                 ->send(new CompartirUrlEncuestaMailable($encuesta, $encuestado->id, $encuestado->correo));
+
+            // Retornar respuesta exitosa
+            return response()->json(['code' => 'NUEVO_ENCUESTADO', 'message' => 'Se envió la encuesta a su correo.'], 200);
         } catch (\Throwable $e) {
             return response()->json(['code' => 'ERROR_NUEVO_ENCUESTADO', 'message' => $e->getMessage()], 500);
         }
-
-        // Retornar respuesta exitosa
-        return response()->json(['code' => 'NUEVO_ENCUESTADO', 'message' => 'Se envió la encuesta a su correo.'], 200);
     }
     /************ FIN VERIFICACIONES */
 

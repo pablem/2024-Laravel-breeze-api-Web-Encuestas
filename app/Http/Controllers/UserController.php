@@ -50,7 +50,7 @@ class UserController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role' => $request->role ?? UserRole::Publicador->value, // Asignar rol predeterminado si no se proporciona
+                'role' => $request->role,
             ]);
 
             event(new Registered($user));

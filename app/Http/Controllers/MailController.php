@@ -76,7 +76,7 @@ class MailController extends Controller
                 ->select('titulo_encuesta', 'descripcion', 'url', 'fecha_finalizacion', 'es_anonima')
                 ->first();
             if (empty($encuesta->url)) {
-                return response()->json(['message' => 'Url inexistente'], 404);
+                return response()->json(['message' => 'Url inexistente'], 400);
             }
             $encuestados = $request->json()->all();
             if (empty($encuestados) || !is_array($encuestados)) {
@@ -101,7 +101,6 @@ class MailController extends Controller
                     }
                     $encuestado = new Encuestado([
                         'correo' => $encuestado['correo'],
-                        'validacion' => 0,
                         // 'ip_identificador' => null, //=> $request->ip(),
                     ]);
                     $encuestado->save();

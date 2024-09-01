@@ -83,8 +83,8 @@ class EncuestadoController extends Controller
                     'correo' => 'required|email|unique:encuestados,correo',
                 ]);
                 if ($validator->fails()) {
-                    $mensajeErrores .= $data['correo'] . " - ";
-                    $mensajeErrores .= implode(" - ", $validator->errors()->all()) . "\n";
+                    $mensajeErrores .= $data['correo'] . ":";
+                    $mensajeErrores .= implode("; \n ", $validator->errors()->all()) . "\n";
                     continue;
                 }
                 $encuestado = new Encuestado([
@@ -95,7 +95,7 @@ class EncuestadoController extends Controller
                 $contadorGuardados++;
             }
             DB::commit();
-            return response()->json(['message' => 'Nuevos contactos almacenados:  ' . $contadorGuardados . "\n" . $mensajeErrores], 200);
+            return response()->json(['message' => 'Contactos almacenados:  ' . $contadorGuardados . "; \n " . $mensajeErrores], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);

@@ -84,27 +84,27 @@ class MailController extends Controller
             }
             $errores = [];
             foreach ($encuestados as $encuestado) {
-                $validator = Validator::make($encuestado, [
-                    'correo' => 'required|email',
-                ]);
-                if ($validator->fails()) {
-                    $errores[] = $encuestado['correo'] . ' - ' . $validator->errors();
-                    continue;            
-                }
-                if (!isset($encuestado['id']) && !$encuesta->es_anonima) {
-                    $validator = Validator::make($encuestado, [
-                        'correo' => 'unique:encuestados,correo',
-                    ]);
-                    if ($validator->fails()) {
-                        $errores[] = $encuestado['correo'] . ' - ' .  $validator->errors();
-                        continue;            
-                    }
-                    $encuestado = new Encuestado([
-                        'correo' => $encuestado['correo'],
-                        // 'ip_identificador' => null, //=> $request->ip(),
-                    ]);
-                    $encuestado->save();
-                }
+                // $validator = Validator::make($encuestado, [
+                //     'correo' => 'required|email',
+                // ]);
+                // if ($validator->fails()) {
+                //     $errores[] = $encuestado['correo'] . ' - ' . $validator->errors();
+                //     continue;            
+                // }
+                // if (!isset($encuestado['id']) && !$encuesta->es_anonima) {
+                //     $validator = Validator::make($encuestado, [
+                //         'correo' => 'unique:encuestados,correo',
+                //     ]);
+                //     if ($validator->fails()) {
+                //         $errores[] = $encuestado['correo'] . ' - ' .  $validator->errors();
+                //         continue;            
+                //     }
+                //     $encuestado = new Encuestado([
+                //         'correo' => $encuestado['correo'],
+                //         // 'ip_identificador' => null, //=> $request->ip(),
+                //     ]);
+                //     $encuestado->save();
+                // }
                 try {
                     if($encuesta->es_anonima) {
                         Mail::to($encuestado['correo'])
@@ -114,7 +114,7 @@ class MailController extends Controller
                         ->send(new CompartirUrlEncuestaMailable($encuesta,$encuestado['id'],$encuestado['correo'] ));
                     }
                 } catch (\Throwable $e) {
-                    $errores[] = $encuestado['correo'] . ' - ' . $e->getMessage();
+                    $errores[] = $encuestado['correo'] . ': ' . $e->getMessage();
                     continue;
                 }
             }
@@ -125,7 +125,7 @@ class MailController extends Controller
                     'message' => $errores
                 ], 400); // Status 206 Partial Content
             }
-            return response()->json(['message' => 'Todos los correos enviados exitosamente'], 200);
+            return response()->json(['message' => 'Se enviaron todos los correos exitosamente'], 200);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

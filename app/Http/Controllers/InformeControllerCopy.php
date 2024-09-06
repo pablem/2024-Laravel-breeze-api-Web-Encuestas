@@ -10,11 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 use Barryvdh\DomPDF\Facade\Pdf;
-use HiFolks\Statistics\Stat;
-use HiFolks\Statistics\Freq;
-// use phpDocumentor\Reflection\Types\This;
 
-class InformeController extends Controller
+class InformeControllerCopy extends Controller
 {
     /**
      * Display the specified resource.
@@ -72,26 +69,24 @@ class InformeController extends Controller
                 foreach ($informe['preguntas'] as $pregunta) {
                     fputcsv($file, ['Titulo', $pregunta['titulo_pregunta']]);
                     fputcsv($file, ['Tipo', $pregunta['tipo_pregunta']]);
+                    if (isset($pregunta['total_promedio'])) {
+                        fputcsv($file, ['Total Promedio', $pregunta['total_promedio']]);
+                    }
+                    if (isset($pregunta['valor_maximo'])) {
+                        fputcsv($file, ['Valor Máximo', $pregunta['valor_maximo']]);
+                    }
+                    if (isset($pregunta['valor_minimo'])) {
+                        fputcsv($file, ['Valor Mínimo', $pregunta['valor_minimo']]);
+                    }
+                    if (isset($pregunta['varianza'])) {
+                        fputcsv($file, ['Varianza', $pregunta['varianza']]);
+                    }
+                    if (isset($pregunta['desviacion_estandar'])) {
+                        fputcsv($file, ['Desviación Estándar', $pregunta['desviacion_estandar']]);
+                    }
                     fputcsv($file, ['Opcion', 'Resultados', 'Porcentaje']);
                     foreach ($pregunta['resultados'] as $resultado) {
                         fputcsv($file, [$resultado['titulo_opcion'], $resultado['resultado_opcion'], $resultado['porcentaje']]);
-                    }
-                    // Estadísticas
-                    foreach ($pregunta['estadisticas'] as $key => $value) {
-                        if (is_array($value)) {
-                            fputcsv($file, [ucfirst(str_replace('_', ' ', $key))]);
-                            foreach ($value as $subKey => $subValue) {
-                                fputcsv($file, [
-                                    ucfirst(str_replace('_', ' ', $subKey)),
-                                    $subValue
-                                ]);
-                            }
-                        } else {
-                            fputcsv($file, [
-                                ucfirst(str_replace('_', ' ', $key)),
-                                $value ?? 'N/A'
-                            ]);
-                        }
                     }
                     fputcsv($file, []);
                 }
@@ -135,101 +130,88 @@ class InformeController extends Controller
 
     private function generarInforme($encuesta)
     {
-        try {
-            $resultado = $encuesta->diasRestantes();
-            $diasRestantes = is_null($resultado)
-                ? 'No'
-                : (string) $encuesta->diasRestantes();
-            $numeroRespuestas = $encuesta->numeroRespuestas();
+        $resultado = $encuesta->diasRestantes();
+        $diasRestantes = is_null($resultado)
+            ? 'No'
+            : (string) $encuesta->diasRestantes();
+        $numeroRespuestas = $encuesta->numeroRespuestas();
 
-            $informe = [
-                'titulo_encuesta' => $encuesta->titulo_encuesta,
-                'dias_restantes' => $diasRestantes,
-                'numero_respuestas' => $numeroRespuestas,
-                // 'preguntas' => []
-            ];
+        $informe = [
+            'titulo_encuesta' => $encuesta->titulo_encuesta,
+            'dias_restantes' => $diasRestantes,
+            'numero_respuestas' => $numeroRespuestas,
+            // 'preguntas' => []
+        ];
 
-            if ($numeroRespuestas < 1) {
-                return $informe;
+        $preguntas = Pregunta::where('encuesta_id', $encuesta->id)->orderBy('id_orden')->get();
+
+        foreach ($preguntas as $pregunta) {
+            $resultados = [];
+            switch ($pregunta->tipo_pregunta->value) {
+                case TipoPregunta::Multiple->value:
+                case TipoPregunta::Unique->value:
+                case TipoPregunta::List->value:
+                    $resultados = $this->seleccionResultados($pregunta);
+                    break;
+                case TipoPregunta::Rating->value:
+                    $resultados = $this->puntuacionResultados($pregunta);
+                    break;
+                case TipoPregunta::Numeric->value:
+                    $resultados = $this->numericoResultados($pregunta);
+                    break;
+                case TipoPregunta::Text->value:
+                    $resultados = $this->textoResultados($pregunta);
+                    break;
             }
-
-            $preguntas = Pregunta::where('encuesta_id', $encuesta->id)->orderBy('id_orden')->get();
-
-            foreach ($preguntas as $pregunta) {
-                $resultados = [];
-                switch ($pregunta->tipo_pregunta->value) {
-                    case TipoPregunta::Multiple->value:
-                    case TipoPregunta::Unique->value:
-                    case TipoPregunta::List->value:
-                        $resultados = $this->seleccionResultados($pregunta);
-                        break;
-                    case TipoPregunta::Rating->value:
-                        $resultados = $this->puntuacionResultados($pregunta);
-                        break;
-                    case TipoPregunta::Numeric->value:
-                        $resultados = $this->numericoResultados($pregunta);
-                        break;
-                    case TipoPregunta::Text->value:
-                        $resultados = $this->textoResultados($pregunta);
-                        break;
-                }
-                $informe['preguntas'][] = $resultados;
-            }
-            return $informe;
-        } catch (\Throwable $th) {
-            throw $th;
+            $informe['preguntas'][] = $resultados;
         }
+        return $informe;
     }
 
     private function seleccionResultados(Pregunta $pregunta): array
     {
         try {
-            $arrayMarcadas = [];
-            $arrayCombinaciones = [];
+            $n = count($pregunta->seleccion);
+            $resultados = array_fill(0, $n, 0);
+            $respuestasEnBlanco = 0;
+            $totalRespuestas = 0;
+            $totalMrcadas = 0;
 
             $respuestas = $pregunta->respuestas()->get('seleccion');
 
-            foreach ($respuestas as $item) {
-                if (is_null($item['seleccion'])) {
-                    $arrayMarcadas[] = 'sin responder';
+            foreach ($respuestas as $respuesta) {
+                $totalRespuestas++;
+                if (is_null($respuesta->seleccion) || empty($respuesta->seleccion)) {
+                    $totalMrcadas++;
+                    $respuestasEnBlanco++;
                 } else {
-                    foreach ($item['seleccion'] as $indice) {
-                        $arrayMarcadas[] = (string)$pregunta->seleccion[$indice];
+                    foreach ($respuesta->seleccion as $opcion) {
+                        if (is_int($opcion) && $opcion >= 0 && $opcion < $n) {
+                            $totalMrcadas++;
+                            $resultados[$opcion]++;
+                        }
                     }
-                    $opciones = $item['seleccion'];
-                    sort($opciones);
-                    $mappedSeleccion = array_map(fn($indice) => $pregunta->seleccion[$indice], $opciones);
-                    $arrayCombinaciones[] = implode(' ', $mappedSeleccion);
                 }
             }
-
-            $frecuencia = Freq::frequencies($arrayMarcadas) ?? null;
-            $porcentaje = Freq::relativeFrequencies($arrayMarcadas, 2) ?? null;
-            $frecCombinaciones = Freq::frequencies($arrayCombinaciones) ?? null;
-            $combinacionMenosElegida = $frecCombinaciones ? array_keys($frecCombinaciones, min($frecCombinaciones))[0] : null;
-            $combinacionMasElegida = $frecCombinaciones ? array_keys($frecCombinaciones, max($frecCombinaciones))[0] : null;
-
             $resultadosFormateados = [];
-            foreach ($frecuencia as $key => $value) {
+            foreach ($pregunta->seleccion as $index => $tituloOpcion) {
+                $porcentaje = $totalMrcadas > 0 ? ($resultados[$index] / $totalMrcadas) * 100 : 0;
                 $resultadosFormateados[] = [
-                    'titulo_opcion' => $key,
-                    'resultado_opcion' => $value,
-                    'porcentaje' => $porcentaje[$key]
+                    'titulo_opcion' => $tituloOpcion,
+                    'resultado_opcion' => $resultados[$index],
+                    'porcentaje' => round($porcentaje, 2)
                 ];
             }
-
-            $estadisticas = $combinacionMenosElegida
-                ? [
-                    'mas_popular' => $combinacionMasElegida,
-                    'menos_popular' => $combinacionMenosElegida
-                ]
-                : [];
-
+            $porcentajeBlanco = $totalRespuestas > 0 ? ($respuestasEnBlanco / $totalMrcadas) * 100 : 0;
+            $resultadosFormateados[] = [
+                'titulo_opcion' => 'sin responder',
+                'resultado_opcion' => $respuestasEnBlanco,
+                'porcentaje' => round($porcentajeBlanco, 2)
+            ];
             return [
                 'titulo_pregunta' => $pregunta->titulo_pregunta,
                 'tipo_pregunta' => $pregunta->tipo_pregunta->value,
-                'resultados' => $resultadosFormateados,
-                'estadisticas' => $estadisticas
+                'resultados' => $resultadosFormateados
             ];
         } catch (\Throwable $th) {
             throw $th;
@@ -238,44 +220,72 @@ class InformeController extends Controller
 
     private function puntuacionResultados(Pregunta $pregunta): array
     {
-        $arrayRespuestas = [];
+        [$min, $max, $step] = $pregunta->rango_puntuacion;
+
+        // var_dump(json_encode([$min, $step, $max]));
+
+        $resultados = [];
+        $respuestasEnBlanco = 0;
+        $totalRespuestas = 0;
+        $sumaPuntuaciones = 0;
+        $totalPromedio = 0;
+
         $respuestas = $pregunta->respuestas()->get(['puntuacion']);
 
-        foreach ($respuestas as $item) {
-            if (is_null($item['puntuacion'])) {
-                $arrayRespuestas[] = 'sin responder';
+        foreach ($respuestas as $respuesta) {
+            $totalRespuestas++;
+            if (is_null($respuesta->puntuacion)) {
+                $respuestasEnBlanco++;
             } else {
-                $arrayRespuestas[] = $item['puntuacion'];
+                $valor = $respuesta->puntuacion;
+                if (!isset($resultados[$valor])) {
+                    $resultados[$valor] = 0;
+                }
+                $resultados[$valor]++;
+                $sumaPuntuaciones += $valor;
             }
         }
-        $estadisticas = $this->estadisticas($arrayRespuestas);
-        $frecuencia = Freq::frequencies($arrayRespuestas);
-        $porcentaje = Freq::relativeFrequencies($arrayRespuestas, 2);
-
         $resultadosFormateados = [];
-        foreach ($frecuencia as $key => $value) {
-            $resultadosFormateados[] = [
-                'titulo_opcion' => $key,
-                'resultado_opcion' => $value,
-                'porcentaje' => $porcentaje[$key]
-            ];
+        for ($i = $min; $i <= $max; $i += $step) {
+            if (isset($resultados[$i]) && $resultados[$i] > 0) {
+                $porcentaje = $totalRespuestas > 0 ? ($resultados[$i] / $totalRespuestas) * 100 : 0;
+                $resultadosFormateados[] = [
+                    'titulo_opcion' => $i,
+                    'resultado_opcion' => $resultados[$i],
+                    'porcentaje' => round($porcentaje, 2)
+                ];
+            }
         }
+        $porcentajeBlanco = $totalRespuestas > 0 ? ($respuestasEnBlanco / $totalRespuestas) * 100 : 0;
+        $resultadosFormateados[] = [
+            'titulo_opcion' => 'sin responder',
+            'resultado_opcion' => $respuestasEnBlanco,
+            'porcentaje' => round($porcentajeBlanco, 2)
+        ];
+
+        $totalPromedio = $totalRespuestas > 0 ? $sumaPuntuaciones / ($totalRespuestas - $respuestasEnBlanco) : 0;
 
         return [
             'titulo_pregunta' => $pregunta->titulo_pregunta,
             'tipo_pregunta' => 'puntuación',
-            // 'label_total_promedio' => 'Puntuación promedio',
-            'resultados' => $resultadosFormateados,
-            'estadisticas' => $estadisticas
+            'total_promedio' => round($totalPromedio, 2),
+            'label_total_promedio' => 'Puntuación promedio',
+            'resultados' => $resultadosFormateados
         ];
     }
 
     private function numericoResultados(Pregunta $pregunta): array
     {
+
+        // var_dump(json_encode([$min, $step, $max]));
+
         $respuestasEnBlanco = 0;
         $totalRespuestas = 0;
         $numeroNoNulos = 0;
+        $sumaTotal = 0.00;
+        $promedio = 0;
 
+        // $respuestas = $pregunta->respuestas()->get(['valor_numerico']);
         $valoresNumericos = $pregunta->respuestas()->pluck('valor_numerico')->toArray();
 
         if (empty($valoresNumericos)) {
@@ -283,9 +293,8 @@ class InformeController extends Controller
                 'titulo_pregunta' => $pregunta->titulo_pregunta,
                 'tipo_pregunta' => $pregunta->tipo_pregunta->value,
                 'total_promedio' => 0,
-                // 'label_total_promedio' => 'Valor promedio',
-                'resultados' => [],
-                'estadisticas' => []
+                'label_total_promedio' => 'Valor promedio',
+                'resultados' => []
             ];
         }
 
@@ -295,9 +304,26 @@ class InformeController extends Controller
             return !is_null($valor);
         });
         $numeroNoNulos = count($valoresNoNulos);
+        $sumaTotal = array_sum($valoresNoNulos);
         $respuestasEnBlanco = $totalRespuestas - $numeroNoNulos;
         $max = max($valoresNoNulos);
         $min = min($valoresNoNulos);
+        $promedio = $numeroNoNulos > 0 ? $sumaTotal / $numeroNoNulos : 0;
+
+        // Varianza (?)
+        $media = $promedio;
+        $sumatoriaDesviacionCuadrada = array_sum(array_map(function ($valor) use ($media) {
+            return pow($valor - $media, 2);
+        }, $valoresNoNulos));
+        $varianza = $numeroNoNulos > 0 ? $sumatoriaDesviacionCuadrada / $numeroNoNulos : 0;
+        $varianza = round($varianza, 2);
+
+
+
+
+
+        // Desviación estándar (?)
+        $desviacionEstandar = round(sqrt($varianza), 2);
 
         // Dividir el rango en 5 intervalos
         $intervalo = ($max - $min) / 5;
@@ -332,14 +358,16 @@ class InformeController extends Controller
             'porcentaje' => round($porcentajeBlanco, 2)
         ];
 
-        $estadisticas = $this->estadisticas($valoresNumericos);
-
         return [
             'titulo_pregunta' => $pregunta->titulo_pregunta,
             'tipo_pregunta' => 'valor numérico',
-            // 'label_total_promedio' => 'Valor promedio obtenido de todas las respuestas',
-            'resultados' => $resultadosFormateados,
-            'estadisticas' => $estadisticas
+            'total_promedio' => round($promedio, 2),
+            'label_total_promedio' => 'Valor promedio obtenido de todas las respuestas',
+            'valor_maximo' => $max,
+            'valor_minimo' => $min,
+            'varianza' => $varianza,
+            'desviacion_estandar' => $desviacionEstandar,
+            'resultados' => $resultadosFormateados
         ];
     }
 
@@ -348,6 +376,8 @@ class InformeController extends Controller
     {
         $respuestasEnBlanco = 0;
         $totalRespuestas = 0;
+        $sumaTotalPalabras = 0;
+        $totalPromedio = 0;
         $resultados = [
             'Respuestas cortas (-15 palabras)' => 0,
             'Respuestas medias (-50 palabras)' => 0,
@@ -355,17 +385,14 @@ class InformeController extends Controller
         ];
 
         $respuestas = $pregunta->respuestas()->get(['entrada_texto']);
-        if (!$respuestas || $respuestas->isEmpty()) {
-            return [];
-        }
-        $arrayRespuestas = [];
+
         foreach ($respuestas as $respuesta) {
             $totalRespuestas++;
             if (is_null($respuesta->entrada_texto) || empty($respuesta->entrada_texto)) {
                 $respuestasEnBlanco++;
             } else {
                 $numPalabras = str_word_count($respuesta->entrada_texto);
-                $arrayRespuestas[] = $numPalabras;
+                $sumaTotalPalabras += $numPalabras;
                 if ($numPalabras < 15) {
                     $resultados['Respuestas cortas (-15 palabras)']++;
                 } elseif ($numPalabras <= 50) {
@@ -373,42 +400,8 @@ class InformeController extends Controller
                 } else {
                     $resultados['Respuestas largas (+50 palabras)']++;
                 }
-
-                // Extraer palabras 
-                $palabras = str_word_count($respuesta->entrada_texto, 1);
-                $palabrasLargas = array_filter($palabras, fn($palabra) => strlen($palabra) > 4);
-
-                // Contar palabras de más de 4 caracteres
-                foreach ($palabrasLargas as $palabra) {
-                    $frecuenciaPalabras[$palabra] = ($frecuenciaPalabras[$palabra] ?? 0) + 1;
-                }
-
-                // Obtener expresiones de 2 o 3 palabras
-                $expresiones = [];
-                for ($i = 0; $i < count($palabras) - 1; $i++) {
-                    if (isset($palabras[$i + 2])) {
-                        $expresiones[] = $palabras[$i] . ' ' . $palabras[$i + 1] . ' ' . $palabras[$i + 2];
-                    }
-                }
-
-                // Contar las expresiones más usadas
-                foreach ($expresiones as $expresion) {
-                    $frecuenciaExpresiones[$expresion] = ($frecuenciaExpresiones[$expresion] ?? 0) + 1;
-                }
             }
         }
-        $estadisticas = $this->estadisticas($arrayRespuestas);
-
-        // Obtener las palabras largas más usadas
-        $frecuenciaPalabras = array_filter($frecuenciaPalabras, fn($count) => $count > 1);
-        arsort($frecuenciaPalabras);
-        $palabrasMasUsadas = array_slice($frecuenciaPalabras, 0, 10);
-
-        // Obtener las expresiones más usadas
-        $frecuenciaExpresiones = array_filter($frecuenciaExpresiones, fn($count) => $count > 1);
-        arsort($frecuenciaExpresiones);
-        $expresionesMasUsadas = array_slice($frecuenciaExpresiones, 0, 10);
-
         $resultadosFormateados = [];
         foreach ($resultados as $tipoRespuesta => $cantidad) {
             $porcentaje = $totalRespuestas > 0 ? ($cantidad / $totalRespuestas) * 100 : 0;
@@ -425,37 +418,15 @@ class InformeController extends Controller
             'porcentaje' => round($porcentajeBlanco, 2)
         ];
 
-        $estadisticas['palabras_mas_usadas'] = $palabrasMasUsadas;
-        $estadisticas['expresiones_mas_usadas'] = $expresionesMasUsadas;
+        $totalPromedio = $totalRespuestas > 0 && $totalRespuestas !== $respuestasEnBlanco ? $sumaTotalPalabras / ($totalRespuestas - $respuestasEnBlanco) : 0;
 
         return [
             'titulo_pregunta' => $pregunta->titulo_pregunta,
             'tipo_pregunta' => 'texto libre',
-            // 'label_total_promedio' => 'Número de palabras promedio por respuesta',
-            'resultados' => $resultadosFormateados,
-            'estadisticas' => $estadisticas,
+            'total_promedio' => round($totalPromedio, 2),
+            'label_total_promedio' => 'Número de palabras promedio por respuesta',
+            'resultados' => $resultadosFormateados
         ];
-    }
-
-    private function estadisticas(array $respuestas)
-    {
-        $estadisticas = [];
-
-        $data = array_filter($respuestas, fn($valor) => (!is_null($valor) && is_numeric($valor)));
-        $data = array_values($data);
-
-        // var_dump(json_encode($data));
-        if (count($data) > 0) {
-            $estadisticas['maximo'] = max($data);
-            $estadisticas['minimo'] = min($data);
-            $estadisticas['media'] = round(Stat::mean($data), 2);
-            $estadisticas['mediana'] = round(Stat::median($data), 2);
-            $estadisticas['moda'] = Stat::mode($data);
-            $estadisticas['desviacion_estandar'] = Stat::stdev($data, 2);
-            $estadisticas['cuartiles'] = Stat::quantiles($data, 4, 2); //Stat::quantiles( array $data, $n=4, $round=null )
-            $estadisticas['frecuencia_por_intervalos'] = Freq::frequencyTable($data, 5);
-        }
-        return $estadisticas;
     }
 
     /**

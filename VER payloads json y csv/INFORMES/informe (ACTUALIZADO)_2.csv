@@ -1,0 +1,124 @@
+"Titulo Encuesta","Encuesta control publicada piloto II"
+"Dias Restantes",No
+"Numero de Respuestas",11
+
+Titulo,"Pregunta control texto"
+Tipo,"texto libre"
+Opcion,Resultados,Porcentaje
+"Respuestas cortas (-15 palabras)",1,9.09
+"Respuestas medias (-50 palabras)",3,27.27
+"Respuestas largas (+50 palabras)",4,36.36
+"sin responder",3,27.27
+Maximo,75
+Minimo,10
+Media,43.88
+Mediana,42.5
+Moda,N/A
+"Desviacion estandar",26.64
+Cuartiles
+0,17.25
+1,42.5
+2,71.5
+"Frecuencia por intervalos"
+10,2
+23,2
+36,0
+49,1
+62,2
+"Palabras mas usadas"
+Voluptatem,8
+Dignissimos,7
+Consequatur,6
+Omnis,5
+Rerum,5
+Dolor,5
+Numquam,4
+Quaerat,4
+Animi,4
+Inventore,4
+"Expresiones mas usadas"
+
+Titulo,"Pregunta control multiple choice"
+Tipo,"multiple choice"
+Opcion,Resultados,Porcentaje
+Cine,8,40
+Literatura,1,5
+Teatro,10,50
+"sin responder",1,5
+"Mas popular","Cine Teatro"
+"Menos popular","Cine Literatura Teatro"
+
+Titulo,"Pregunta control opción única"
+Tipo,"unique choice"
+Opcion,Resultados,Porcentaje
+Agua,2,18.18
+Fuego,8,72.73
+"sin responder",1,9.09
+"Mas popular",Fuego
+"Menos popular",Agua
+
+Titulo,"Pregunta control lista desplegable"
+Tipo,list
+Opcion,Resultados,Porcentaje
+Catamarca,1,9.09
+Jujuy,3,27.27
+"La Rioja",2,18.18
+Tucumán,2,18.18
+"sin responder",3,27.27
+"Mas popular",Jujuy
+"Menos popular",Catamarca
+
+Titulo,"Pregunta control rating o calificación"
+Tipo,puntuación
+Opcion,Resultados,Porcentaje
+1,1,9.09
+3,1,9.09
+4,1,9.09
+5,2,18.18
+7,1,9.09
+8,1,9.09
+10,3,27.27
+"sin responder",1,9.09
+Maximo,10
+Minimo,1
+Media,6.3
+Mediana,6
+Moda,10
+"Desviacion estandar",3.2
+Cuartiles
+0,3.75
+1,6
+2,10
+"Frecuencia por intervalos"
+1,1
+3,2
+5,2
+7,2
+9,3
+
+Titulo,"Pregunta control valor numérico"
+Tipo,"valor numérico"
+Opcion,Resultados,Porcentaje
+"[19.65 - 52.534)",2,18.18
+"[52.534 - 85.418)",0,0
+"[85.418 - 118.302)",2,18.18
+"[118.302 - 151.186)",3,27.27
+"[151.186 - 184.07)",1,9.09
+"sin responder",3,27.27
+Maximo,184.07
+Minimo,19.65
+Media,102.88
+Mediana,116.79
+Moda,N/A
+"Desviacion estandar",57.84
+Cuartiles
+0,37.79
+1,116.79
+2,139.51
+"Frecuencia por intervalos"
+19,2
+53,0
+87,2
+121,3
+155,1
+

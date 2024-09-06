@@ -68,6 +68,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/encuestas/{encuestaId}/informe_pdf', [InformeController::class, 'downloadPdf']);
     //Imprimir Encuesta 
     Route::get('/encuestas/{encuestaId}/pdf', [InformeController::class, 'downloadSurveyPdf']);
+    Route::get('/encuestas/{encuestaId}/tabla_respuestas_csv', [InformeController::class, 'tablaRespuestasCsv']);
     //dashboard
     Route::get('/dashboard/contadores_encuestas', [DashboardController::class, 'conteoEncuestas']); //dashboard/{idFuncion}
     Route::get('/dashboard/ratio_respuestas', [DashboardController::class, 'ratioRespuestas']);

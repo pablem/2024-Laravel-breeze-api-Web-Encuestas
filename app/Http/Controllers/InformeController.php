@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Response;
 use Barryvdh\DomPDF\Facade\Pdf;
 use HiFolks\Statistics\Stat;
 use HiFolks\Statistics\Freq;
+use Illuminate\Support\Facades\DB;
+
 // use phpDocumentor\Reflection\Types\This;
 
 class InformeController extends Controller
@@ -99,6 +101,84 @@ class InformeController extends Controller
             };
 
             $filename = 'informe_' . $encuestaId . '.csv';
+            return Response::streamDownload($callback, $filename, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Recupera todas las respuestas y descarga en formato .csv
+     * 
+     * @param  int  $encuestaId
+     * @return \Illuminate\Http\Response
+     */
+    public function tablaRespuestasCsv($encuestaId)
+    {
+        try {
+            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta']);
+            if (is_null($encuesta)) {
+                return response()->json(['error' => 'Encuesta no encontrada.'], 404);
+            }
+
+            $respuestas = DB::select('
+            SELECT Pr.id AS id_pregunta, 
+                Pr.tipo_pregunta, 
+                Pr.id_orden, 
+                Re.id AS id_respuesta, 
+                Re.created_at AS fecha,
+                Pr.seleccion AS opciones,
+                Re.seleccion, 
+            (
+            CASE 
+                WHEN Re.puntuacion IS NOT NULL THEN Re.puntuacion::text
+                WHEN Re.valor_numerico IS NOT NULL THEN Re.valor_numerico::text
+                WHEN Re.entrada_texto IS NOT NULL THEN Re.entrada_texto
+                ELSE NULL
+            END
+            ) AS clave_valor
+            FROM preguntas Pr
+            INNER JOIN respuestas Re ON Pr.id = Re.pregunta_id
+            WHERE Pr.encuesta_id = ?
+            ORDER BY Pr.id, Re.id
+        ', [$encuestaId]);
+
+            $callback = function () use ($encuesta,  $respuestas) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['Titulo Encuesta', $encuesta->titulo_encuesta]);
+                fputcsv($file, []);
+
+                fputcsv($file, ['id pregunta', 'tipo de pregunta', 'id respuesta', 'fecha', 'resultado']);
+                foreach ($respuestas as $respuesta) {
+                    $resultado = '';
+                    if ($respuesta->clave_valor) {
+                        $resultado = $respuesta->clave_valor;
+                    }
+                    elseif (!is_null($respuesta->seleccion) && !empty($respuesta->seleccion)) {
+                        $seleccion = json_decode($respuesta->seleccion, true);
+                        $opciones = json_decode($respuesta->opciones, true);
+                        sort($seleccion);
+                        $mappedSeleccion = array_map(fn($indice) => $opciones[$indice], $seleccion);
+                        $resultado = implode(' ', $mappedSeleccion);  
+                    }
+                    fputcsv(
+                        $file,
+                        [
+                            $respuesta->id_pregunta,
+                            $respuesta->tipo_pregunta,
+                            $respuesta->id_respuesta,
+                            $respuesta->fecha,
+                            $resultado,
+                        ]
+                    );
+                }
+                fclose($file);
+            };
+
+            $filename = 'tabla_respuestas_' . $encuestaId . '.csv';
             return Response::streamDownload($callback, $filename, [
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',

@@ -110,9 +110,6 @@ class UserController extends Controller
             if ($usuario->role === UserRole::Super && Auth::user()->role !== UserRole::Super) {
                 return response()->json(['error' => 'No autorizado para modificar un superusuario'], 403);
             }    
-            if ($request->filled('previous_email_id') && !($usuario->hasRole(UserRole::Super->value) || $usuario->hasRole(UserRole::Administrador->value)) ) {
-                return response()->json(['error' => 'No autorizado para cambiar el rol'], 403);
-            }
             // si cambia email blanquear el campo email verificado
             if ($usuario->email !== $request->input('email')) {
                 $usuario->email_verified_at = null;

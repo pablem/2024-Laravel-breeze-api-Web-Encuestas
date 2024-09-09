@@ -125,26 +125,26 @@ class InformeController extends Controller
             }
 
             $respuestas = DB::select('
-            SELECT Pr.id AS id_pregunta, 
-                Pr.tipo_pregunta, 
-                Pr.id_orden, 
-                Re.id AS id_respuesta, 
-                Re.created_at AS fecha,
-                Pr.seleccion AS opciones,
-                Re.seleccion, 
-            (
-            CASE 
-                WHEN Re.puntuacion IS NOT NULL THEN Re.puntuacion::text
-                WHEN Re.valor_numerico IS NOT NULL THEN Re.valor_numerico::text
-                WHEN Re.entrada_texto IS NOT NULL THEN Re.entrada_texto
-                ELSE NULL
-            END
-            ) AS clave_valor
-            FROM preguntas Pr
-            INNER JOIN respuestas Re ON Pr.id = Re.pregunta_id
-            WHERE Pr.encuesta_id = ?
-            ORDER BY Pr.id, Re.id
-        ', [$encuestaId]);
+                SELECT Pr.id AS id_pregunta, 
+                    Pr.tipo_pregunta, 
+                    Pr.id_orden, 
+                    Re.id AS id_respuesta, 
+                    Re.created_at AS fecha,
+                    Pr.seleccion AS opciones,
+                    Re.seleccion, 
+                (
+                CASE 
+                    WHEN Re.puntuacion IS NOT NULL THEN Re.puntuacion::text
+                    WHEN Re.valor_numerico IS NOT NULL THEN Re.valor_numerico::text
+                    WHEN Re.entrada_texto IS NOT NULL THEN Re.entrada_texto
+                    ELSE NULL
+                END
+                ) AS clave_valor
+                FROM preguntas Pr
+                LEFT JOIN respuestas Re ON Pr.id = Re.pregunta_id
+                WHERE Pr.encuesta_id = ?
+                ORDER BY Pr.id, Re.id
+            ', [$encuestaId]);
 
             $callback = function () use ($encuesta,  $respuestas) {
                 $file = fopen('php://output', 'w');
@@ -156,13 +156,12 @@ class InformeController extends Controller
                     $resultado = '';
                     if ($respuesta->clave_valor) {
                         $resultado = $respuesta->clave_valor;
-                    }
-                    elseif (!is_null($respuesta->seleccion) && !empty($respuesta->seleccion)) {
+                    } elseif (!is_null($respuesta->seleccion) && !empty($respuesta->seleccion)) {
                         $seleccion = json_decode($respuesta->seleccion, true);
                         $opciones = json_decode($respuesta->opciones, true);
                         sort($seleccion);
                         $mappedSeleccion = array_map(fn($indice) => $opciones[$indice], $seleccion);
-                        $resultado = implode(' ', $mappedSeleccion);  
+                        $resultado = implode(' ', $mappedSeleccion);
                     }
                     fputcsv(
                         $file,

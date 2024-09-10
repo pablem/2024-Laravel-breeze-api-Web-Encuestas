@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\CompartirUrlEncuestaMailable;
 use App\Models\Encuesta;
 use App\Models\Encuestado;
+use App\Models\MiembroEncuestaPrivada;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -73,7 +74,7 @@ class MailController extends Controller
         try {
             // Trae la datos de la encuesta publicada
             $encuesta = Encuesta::where('id', $encuestaId)
-                ->select('titulo_encuesta', 'descripcion', 'url', 'fecha_finalizacion', 'es_anonima')
+                ->select('titulo_encuesta', 'descripcion', 'url', 'fecha_finalizacion', 'es_anonima', 'es_privada')
                 ->first();
             if (empty($encuesta->url)) {
                 return response()->json(['message' => 'Url inexistente'], 400);
@@ -82,29 +83,36 @@ class MailController extends Controller
             if (empty($encuestados) || !is_array($encuestados)) {
                 return response()->json(['message' => 'No se proporcionaron encuestados válidos'], 400);
             }
-            $errores = [];
+            $errores = '';
             foreach ($encuestados as $encuestado) {
-                // $validator = Validator::make($encuestado, [
-                //     'correo' => 'required|email',
-                // ]);
-                // if ($validator->fails()) {
-                //     $errores[] = $encuestado['correo'] . ' - ' . $validator->errors();
-                //     continue;            
-                // }
-                // if (!isset($encuestado['id']) && !$encuesta->es_anonima) {
-                //     $validator = Validator::make($encuestado, [
-                //         'correo' => 'unique:encuestados,correo',
-                //     ]);
-                //     if ($validator->fails()) {
-                //         $errores[] = $encuestado['correo'] . ' - ' .  $validator->errors();
-                //         continue;            
-                //     }
-                //     $encuestado = new Encuestado([
-                //         'correo' => $encuestado['correo'],
-                //         // 'ip_identificador' => null, //=> $request->ip(),
-                //     ]);
-                //     $encuestado->save();
-                // }
+                $validator = Validator::make($encuestado, [
+                    'correo' => 'required|email',
+                ]);
+                if ($validator->fails()) {
+                    $errores .= $encuestado['correo'] . ': ' . implode(', ', $validator->errors()->all()) . "\n";
+                    continue;            
+                }
+                if (!isset($encuestado['id']) && !$encuesta->es_anonima) {
+                    $validator = Validator::make($encuestado, [
+                        'correo' => 'unique:encuestados,correo',
+                    ]);
+                    if ($validator->fails()) {
+                        $errores .= $encuestado['correo'] . ': ' . implode(', ', $validator->errors()->all()) . "\n";
+                        continue;            
+                    }
+                    $encuestado = new Encuestado([
+                        'correo' => $encuestado['correo'],
+                        // 'ip_identificador' => null, //=> $request->ip(),
+                    ]);
+                    $encuestado->save();
+                    if($encuesta->es_privada) {
+                        $miembro = new MiembroEncuestaPrivada([
+                            'encuesta_id' => $encuestaId,
+                            'encuestado_id' => $encuestado->id,
+                        ]);
+                        $miembro->save();
+                    }
+                }
                 try {
                     if($encuesta->es_anonima) {
                         Mail::to($encuestado['correo'])
@@ -114,7 +122,7 @@ class MailController extends Controller
                         ->send(new CompartirUrlEncuestaMailable($encuesta,$encuestado['id'],$encuestado['correo'] ));
                     }
                 } catch (\Throwable $e) {
-                    $errores[] = $encuestado['correo'] . ': ' . $e->getMessage();
+                    $errores .= $encuestado['correo'] . ': ' . $e->getMessage() . "\n";
                     continue;
                 }
             }

@@ -24,6 +24,7 @@
 
 <body>
     <h1>{{ $informe['titulo_encuesta'] }}</h1>
+    <p>Fecha y hora del informe: {{ $informe['fecha_informe'] }}</p>
     <p>Días restantes: {{ $informe['dias_restantes'] }}</p>
     <p>Número de Respuestas: {{ $informe['numero_respuestas'] }}</p>
 

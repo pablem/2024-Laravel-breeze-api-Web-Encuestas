@@ -375,10 +375,10 @@ class EncuestaController extends Controller
     private function verificarEncuesta($encuesta)
     {
         if ($encuesta->esFinalizada()) {
-            return response()->json(['code' => 'ENCUESTA_FINALIZADA', 'message' => 'Encuesta finalizada'], 200);
+            return response()->json(['code' => 'ENCUESTA_FINALIZADA', 'id' => $encuesta->id, 'message' => 'Encuesta finalizada'], 200);
         }
         if ($encuesta->limite_respuestas > 0 && $encuesta->numeroRespuestas() >= $encuesta->limite_respuestas) {
-            return response()->json(['code' => 'LIMITE_RESPUESTAS_ALCANZADO', 'message' => 'Se ha alcanzado el límite de respuestas para esta encuesta.'], 200);
+            return response()->json(['code' => 'LIMITE_RESPUESTAS_ALCANZADO', 'id' => $encuesta->id, 'message' => 'Se ha alcanzado el límite de respuestas para esta encuesta.'], 200);
         }
         return null;
     }
@@ -429,7 +429,7 @@ class EncuestaController extends Controller
 
         $respuestaExistente = $query->first(['respuestas.*']);
         if ($respuestaExistente) {
-            return response()->json(['code' => 'ENCUESTA_YA_RESPONDIDA', 'message' => 'Ud. ya ha respondido esta encuesta.'], 200);
+            return response()->json(['code' => 'ENCUESTA_YA_RESPONDIDA', 'id' => $encuesta->id, 'message' => 'Ud. ya ha respondido esta encuesta.'], 200);
         }
 
         return null;

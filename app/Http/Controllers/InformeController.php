@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\TipoPregunta;
 use App\Models\Encuesta;
+use App\Models\Encuestado;
 use App\Models\Pregunta;
 use App\Models\Respuesta;
 use Illuminate\Http\Request;
@@ -18,6 +19,41 @@ use Illuminate\Support\Facades\DB;
 
 class InformeController extends Controller
 {
+    private function ratioRespuestas($id)
+    {
+        try {
+            $conteos = DB::select('
+            SELECT COUNT(Re.id) AS total_respuestas, 
+                COUNT (Re.id) FILTER (
+                    WHERE Re.entrada_texto IS NULL
+                    AND Re.puntuacion IS NULL
+                    AND Re.seleccion IS NULL
+                    AND Re.valor_numerico IS NULL
+                ) AS sin_responder
+            FROM respuestas Re
+            INNER JOIN preguntas Pr ON Pr.id = Re.pregunta_id
+            WHERE Pr.encuesta_id = ?
+            ', [$id]);
+
+            $totalRespuestas = $conteos[0]->total_respuestas ?? 0;
+            $totalSinResponder = $conteos[0]->sin_responder ?? 0;
+
+            $porcentajeRespondidas = $totalRespuestas > 0
+                ? (1 - ($totalSinResponder / $totalRespuestas)) * 100
+                : 0;
+
+            $ratioRespuestas = [
+                'total' => $totalRespuestas,
+                'completadas' => $totalRespuestas - $totalSinResponder,
+                'sin_responder' => $totalSinResponder,
+                'porcentaje' => round($porcentajeRespondidas, 2)
+            ];
+
+            return $ratioRespuestas;
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
     /**
      * Display the specified resource.
      * 
@@ -25,20 +61,27 @@ class InformeController extends Controller
      * @param  int  $encuestaId
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request, $encuestaId) //, $email = null)
+    public function show(Request $request, $encuestaId)
     {
         try {
-            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion', 'es_privada']);
+            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion']);
             if (is_null($encuesta)) {
                 return response()->json(['error' => 'Encuesta no encontrada.'], 404);
             }
-            if ($encuesta->es_privada) {
-                // $email = $request->input('correo');
-                if (!Auth::check() && (!$request->has('correo') || !$encuesta->esMiembro($request->input('correo')))) {
-                    return response()->json(['code' => 'ENCUESTA_PRIVADA', 'message' => 'No tiene acceso a esta encuesta privada.'], 200); //403
+            if (!Auth::check()) {
+                if ($request->has('encuestadoId') && $request->has('hash')) {
+                    $encuestadoId = $request->input('encuestadoId');
+                    $hash = $request->input('hash');
+                    $correo = Encuestado::where('id', $encuestadoId)->pluck('correo')->first();
+                    if (!$correo || !hash_equals(sha1($correo), (string) $hash)) {
+                        return response()->json(['message' => 'Falló la verificación del correo del encuestado.'], 403);
+                    }
+                } else {
+                    return response()->json(['message' => 'Los campos de validación están vacíos.'], 403);
                 }
             }
             $informe = $this->generarInforme($encuesta);
+            $informe['ratio_respuestas'] = $this->ratioRespuestas($encuestaId);
             return response()->json($informe, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
@@ -57,7 +100,7 @@ class InformeController extends Controller
     public function downloadCsv($encuestaId)
     {
         try {
-            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion', 'es_privada']);
+            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion']);
             if (is_null($encuesta)) {
                 return response()->json(['error' => 'Encuesta no encontrada.'], 404);
             }
@@ -67,6 +110,7 @@ class InformeController extends Controller
             $callback = function () use ($informe) {
                 $file = fopen('php://output', 'w');
                 fputcsv($file, ['Titulo Encuesta', $informe['titulo_encuesta']]);
+                fputcsv($file, ['Fecha', $informe['fecha_informe']]);
                 fputcsv($file, ['Dias Restantes', $informe['dias_restantes']]);
                 fputcsv($file, ['Numero de Respuestas', $informe['numero_respuestas']]);
                 fputcsv($file, []);
@@ -196,7 +240,7 @@ class InformeController extends Controller
     public function downloadPdf($encuestaId)
     {
         try {
-            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion', 'es_privada']);
+            $encuesta = Encuesta::find($encuestaId, ['id', 'titulo_encuesta', 'fecha_finalizacion']);
             if (is_null($encuesta)) {
                 return response()->json(['error' => 'Encuesta no encontrada.'], 404);
             }
@@ -223,6 +267,7 @@ class InformeController extends Controller
 
             $informe = [
                 'titulo_encuesta' => $encuesta->titulo_encuesta,
+                'fecha_informe' => now()->format('d-m-Y H:i:s'),
                 'dias_restantes' => $diasRestantes,
                 'numero_respuestas' => $numeroRespuestas,
                 // 'preguntas' => []
@@ -278,7 +323,7 @@ class InformeController extends Controller
                     $opciones = $item['seleccion'];
                     sort($opciones);
                     $mappedSeleccion = array_map(fn($indice) => $pregunta->seleccion[$indice], $opciones);
-                    $arrayCombinaciones[] = implode(' ', $mappedSeleccion);
+                    $arrayCombinaciones[] = implode(' + ', $mappedSeleccion);
                 }
             }
 
@@ -287,6 +332,14 @@ class InformeController extends Controller
             $frecCombinaciones = Freq::frequencies($arrayCombinaciones) ?? null;
             $combinacionMenosElegida = $frecCombinaciones ? array_keys($frecCombinaciones, min($frecCombinaciones))[0] : null;
             $combinacionMasElegida = $frecCombinaciones ? array_keys($frecCombinaciones, max($frecCombinaciones))[0] : null;
+            
+            arsort($frecCombinaciones);
+            $top5 = array_slice($frecCombinaciones, 0, 5, true);
+            $otros = array_slice($frecCombinaciones, 5);
+            $otrosSum = array_sum($otros);
+            if ($otrosSum > 0) {
+                $top5['(otros)'] = $otrosSum;
+            }
 
             $resultadosFormateados = [];
             foreach ($frecuencia as $key => $value) {
@@ -300,12 +353,14 @@ class InformeController extends Controller
             $estadisticas = $combinacionMenosElegida
                 ? [
                     'mas_popular' => $combinacionMasElegida,
-                    'menos_popular' => $combinacionMenosElegida
+                    'menos_popular' => $combinacionMenosElegida,
+                    'frecuencia_combinaciones' => $top5
                 ]
                 : [];
 
             return [
-                'titulo_pregunta' => $pregunta->titulo_pregunta,
+                'id_pregunta' => $pregunta->id,
+                'titulo_pregunta' => $pregunta->id_orden . '. ' . $pregunta->titulo_pregunta,
                 'tipo_pregunta' => $pregunta->tipo_pregunta->value,
                 'resultados' => $resultadosFormateados,
                 'estadisticas' => $estadisticas
@@ -341,7 +396,8 @@ class InformeController extends Controller
         }
 
         return [
-            'titulo_pregunta' => $pregunta->titulo_pregunta,
+            'id_pregunta' => $pregunta->id,
+            'titulo_pregunta' => $pregunta->id_orden . '. ' . $pregunta->titulo_pregunta,
             'tipo_pregunta' => 'puntuación',
             // 'label_total_promedio' => 'Puntuación promedio',
             'resultados' => $resultadosFormateados,
@@ -359,7 +415,8 @@ class InformeController extends Controller
 
         if (empty($valoresNumericos)) {
             return [
-                'titulo_pregunta' => $pregunta->titulo_pregunta,
+                'id_pregunta' => $pregunta->id,
+                'titulo_pregunta' => $pregunta->id_orden . '. ' . $pregunta->titulo_pregunta,
                 'tipo_pregunta' => $pregunta->tipo_pregunta->value,
                 'total_promedio' => 0,
                 // 'label_total_promedio' => 'Valor promedio',
@@ -414,7 +471,8 @@ class InformeController extends Controller
         $estadisticas = $this->estadisticas($valoresNumericos);
 
         return [
-            'titulo_pregunta' => $pregunta->titulo_pregunta,
+            'id_pregunta' => $pregunta->id,
+            'titulo_pregunta' => $pregunta->id_orden . '. ' . $pregunta->titulo_pregunta,
             'tipo_pregunta' => 'valor numérico',
             // 'label_total_promedio' => 'Valor promedio obtenido de todas las respuestas',
             'resultados' => $resultadosFormateados,
@@ -476,17 +534,19 @@ class InformeController extends Controller
                 }
             }
         }
-        $estadisticas = $this->estadisticas($arrayRespuestas);
+        $estadisticas = $this->estadisticas($arrayRespuestas, true);
 
         // Obtener las palabras largas más usadas
         $frecuenciaPalabras = array_filter($frecuenciaPalabras, fn($count) => $count > 1);
         arsort($frecuenciaPalabras);
-        $palabrasMasUsadas = array_slice($frecuenciaPalabras, 0, 10);
+        $palabrasMasUsadas = !empty($frecuenciaPalabras) ? array_slice($frecuenciaPalabras, 0, 6) : null;
+        if($palabrasMasUsadas) ksort($palabrasMasUsadas);
 
         // Obtener las expresiones más usadas
         $frecuenciaExpresiones = array_filter($frecuenciaExpresiones, fn($count) => $count > 1);
         arsort($frecuenciaExpresiones);
-        $expresionesMasUsadas = array_slice($frecuenciaExpresiones, 0, 10);
+        $expresionesMasUsadas = !empty($frecuenciaExpresiones) ? array_slice($frecuenciaExpresiones, 0,6) : null;
+        if($expresionesMasUsadas) ksort($expresionesMasUsadas);
 
         $resultadosFormateados = [];
         foreach ($resultados as $tipoRespuesta => $cantidad) {
@@ -508,7 +568,8 @@ class InformeController extends Controller
         $estadisticas['expresiones_mas_usadas'] = $expresionesMasUsadas;
 
         return [
-            'titulo_pregunta' => $pregunta->titulo_pregunta,
+            'id_pregunta' => $pregunta->id,
+            'titulo_pregunta' => $pregunta->id_orden . '. ' . $pregunta->titulo_pregunta,
             'tipo_pregunta' => 'texto libre',
             // 'label_total_promedio' => 'Número de palabras promedio por respuesta',
             'resultados' => $resultadosFormateados,
@@ -516,7 +577,7 @@ class InformeController extends Controller
         ];
     }
 
-    private function estadisticas(array $respuestas)
+    private function estadisticas(array $respuestas, bool $texto = null)
     {
         $estadisticas = [];
 
@@ -524,14 +585,15 @@ class InformeController extends Controller
         $data = array_values($data);
 
         // var_dump(json_encode($data));
-        if (count($data) > 0) {
+        if (count($data) > 1) {
             $estadisticas['maximo'] = max($data);
             $estadisticas['minimo'] = min($data);
-            $estadisticas['media'] = round(Stat::mean($data), 2);
             $estadisticas['mediana'] = round(Stat::median($data), 2);
+            $estadisticas['media'] = round(Stat::mean($data), 2);
+            if ($texto) return $estadisticas;
             $estadisticas['moda'] = Stat::mode($data);
+            if (count($data) > 2) $estadisticas['cuartiles'] = Stat::quantiles($data, 4, 2); //Stat::quantiles( array $data, $n=4, $round=null )
             $estadisticas['desviacion_estandar'] = Stat::stdev($data, 2);
-            $estadisticas['cuartiles'] = Stat::quantiles($data, 4, 2); //Stat::quantiles( array $data, $n=4, $round=null )
             $estadisticas['frecuencia_por_intervalos'] = Freq::frequencyTable($data, 5);
         }
         return $estadisticas;

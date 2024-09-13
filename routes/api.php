@@ -66,9 +66,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //Informes
     Route::get('/encuestas/{encuestaId}/informe_csv', [InformeController::class, 'downloadCsv']);
     Route::get('/encuestas/{encuestaId}/informe_pdf', [InformeController::class, 'downloadPdf']);
+    Route::get('/encuestas/{encuestaId}/tabla_respuestas_csv', [InformeController::class, 'tablaRespuestasCsv']);
     //Imprimir Encuesta 
     Route::get('/encuestas/{encuestaId}/pdf', [InformeController::class, 'downloadSurveyPdf']);
-    Route::get('/encuestas/{encuestaId}/tabla_respuestas_csv', [InformeController::class, 'tablaRespuestasCsv']);
     //dashboard
     Route::get('/dashboard/contadores_encuestas', [DashboardController::class, 'conteoEncuestas']); //dashboard/{idFuncion}
     Route::get('/dashboard/ratio_respuestas', [DashboardController::class, 'ratioRespuestas']);
@@ -96,7 +96,8 @@ Route::get('/encuestas/publicada/{slug}/{encuestadoId}/{hash}', [EncuestaControl
 Route::get('/encuestas/{encuestaId}/preguntas', [PreguntaController::class, 'getPreguntas']);
 Route::post('/encuestas/{encuestaId}/responder', [RespuestaController::class, 'store']); //modificar: vector de ids
 //Informes
-Route::get('/encuestas/{encuestaId}/informe', [InformeController::class, 'show']);
+Route::post('/encuestas/{encuestaId}/informe', [InformeController::class, 'show']);
+// Route::get('/encuestas/{encuestaId}/informe/{encuestadoId?}/{hash?}', [InformeController::class, 'show']);
 
 //Probando el proveedor (Mailtrap) con un texto plano
 Route::get('/enviar_texto_simple', function () {

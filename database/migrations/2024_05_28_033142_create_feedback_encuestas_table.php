@@ -18,6 +18,9 @@ return new class extends Migration
             $table->unsignedSmallInteger('indice_satisfaccion')->nullable();//No se usa
             $table->text('comentarios')->nullable();
             $table->timestamps();
+            //Indices
+            $table->index('id');
+            $table->index('encuesta_id');
         });
     }
 

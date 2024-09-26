@@ -1,10 +1,9 @@
-
 //http://localhost:8000/api/dashboard/novedades_encuestas
 
-//El campo "actividad" puede contener: Creada Actualizada Publicada Finalizada Comentada 
+//El campo "actividad" puede contener: Creada Actualizada Publicada Finalizada Comentada
 
-//El request puede contener: { "fecha": "2024-08-19" }
-
+//El request puede contener: { "fecha": "2024-08-19" } por defecto es hoy
+//Actividad separada por espacios
 [
     {
         "id": 1,

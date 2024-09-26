@@ -28,8 +28,11 @@ return new class extends Migration
             $table->unsignedTinyInteger('version')->default(1);
             $table->unsignedInteger('limite_respuestas')->default(0);
             $table->timestamps();
-            // Crear índice en el campo 'url'
+            // Crear índices
+            $table->index('id');
             $table->index('url');
+            $table->index('fecha_publicacion');
+            $table->index('fecha_finalizacion');
         });
     }
 

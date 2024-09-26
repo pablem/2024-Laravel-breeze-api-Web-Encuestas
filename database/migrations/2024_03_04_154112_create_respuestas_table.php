@@ -31,8 +31,14 @@ return new class extends Migration
             $table->timestamps();
             // Establecer clave primaria compuesta (frmework: no convine)
             // $table->primary(['pregunta_id', 'encuestado_id']);
+            //Indices
+            $table->index('id');
+            $table->index('pregunta_id');
+            $table->index('encuestado_id');
             // Añadir índices únicos adicionales
-            $table->unique(['pregunta_id', 'encuestado_id']);
+            $table->index(['entrada_texto','puntuacion','valor_numerico']);
+            $table->unique(['encuestado_id','pregunta_id']);
+            $table->unique(['pregunta_id','encuestado_id']);
         });
     }
 

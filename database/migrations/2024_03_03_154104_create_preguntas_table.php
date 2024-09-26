@@ -22,6 +22,9 @@ return new class extends Migration
             $table->json('rango_puntuacion')->nullable();
             $table->boolean('es_obligatoria')->default(false);
             $table->timestamps();
+            // Crear índices
+            $table->index('id');
+            $table->index('encuesta_id');
         });
     }
 

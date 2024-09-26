@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('ip_identificador')->unique()->nullable();
             $table->unsignedSmallInteger('validacion')->nullable();
             $table->timestamps();
+            //Indices
+            $table->index('id');
+            $table->index('correo');
+
         });
     }
 

@@ -26,7 +26,12 @@ return new class extends Migration
             $table->timestamps();
             // Establecer clave primaria compuesta
             // $table->primary(['encuestado_id', 'encuesta_id']);
+            //Indices
+            $table->index('id');
+            $table->index('encuestado_id');
+            $table->index('encuesta_id');
             // Añadir índices únicos adicionales
+            $table->unique([ 'encuesta_id','encuestado_id']);
             $table->unique(['encuestado_id', 'encuesta_id']);
         });
     }

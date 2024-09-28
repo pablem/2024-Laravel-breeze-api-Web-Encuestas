@@ -1,0 +1,36 @@
+// http://localhost:8000/api/encuestas/4/responder
+
+{
+    "correo": "privado1@privado",
+    "respuestas": [
+        {
+        "pregunta_id": 19,
+        "entrada_texto": "Esta es una respuesta de texto del encuestado privado1@privado"
+        },
+        // (pregunta multiple)
+        {
+        "pregunta_id": 20,
+        "seleccion": [0,2]
+        },
+        // (pregunta unique)
+        {
+        "pregunta_id": 21,
+        "seleccion": [1]
+        },
+        // (pregunta lista)
+        {
+        "pregunta_id": 22,
+        "seleccion": [0]
+        },
+        // (pregunta raiting)
+        {
+        "pregunta_id": 23,
+        "puntuacion": 10
+        },
+        // (pregunta numerica vacía)
+        {
+        "pregunta_id": 24
+        }
+    ],
+    "comentarios": "Saludos."
+}

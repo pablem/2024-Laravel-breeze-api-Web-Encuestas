@@ -88,5 +88,17 @@ class RespuestaSeeder extends Seeder
                 }
             }
         }
+        $preguntaId = Pregunta::where('encuesta_id', 8)
+            ->where('tipo_pregunta', 'text')
+            ->value('id');
+        foreach ($encuestadosIds as $id) {
+            Respuesta::create([
+                'encuestado_id' => $id,
+                'pregunta_id' => $preguntaId,
+                'entrada_texto' => $id % 2 === 0
+                    ? fake()->sentence(mt_rand(0, 75)) . ' frase repetida ejemplo'
+                    : fake()->optional()->sentence(mt_rand(0, 75)) . ' probando el contador'
+            ]);
+        }
     }
 }

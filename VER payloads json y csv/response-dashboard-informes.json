@@ -1,0 +1,121 @@
+//http://localhost:8000/api/dashboard/informes
+{
+    "contadores_encuestas": {
+        "total_encuestas": 26,
+        "borradores": 5,
+        "publicadas": 12,
+        "finalizadas": 9,
+        "modo_piloto": 4,
+        "privadas": 3,
+        "anonimas": 2
+    },
+    "ratio_respuestas": {
+        "porcentaje_respondidas": 82.86,
+        "porcentaje_respondidas_privadas": 100,
+        "porcentaje_encuestas_privadas_hechas": 12.5
+    },
+    "top_respondidas": [
+        {
+            "id_orden": 1,
+            "id_encuesta": 20,
+            "titulo_encuesta": "titulo encuesta NNN",
+            "respondidas": 9,
+            "respondidas_incompletas": 0,
+            "porcentaje_incompletas": 0
+        },
+        {
+            "id_orden": 2,
+            "id_encuesta": 3,
+            "titulo_encuesta": "Encuesta control publicada piloto III",
+            "respondidas": 8,
+            "respondidas_incompletas": 4,
+            "porcentaje_incompletas": 50
+        },
+        {
+            "id_orden": 3,
+            "id_encuesta": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "respondidas": 8,
+            "respondidas_incompletas": 3,
+            "porcentaje_incompletas": 37.5
+        },
+        {
+            "id_orden": 4,
+            "id_encuesta": 10,
+            "titulo_encuesta": "Optio rerum aut perferendis.",
+            "respondidas": 7,
+            "respondidas_incompletas": 1,
+            "porcentaje_incompletas": 14.29
+        },
+        {
+            "id_orden": 5,
+            "id_encuesta": 1,
+            "titulo_encuesta": "Encuesta control publicada I",
+            "respondidas": 7,
+            "respondidas_incompletas": 3,
+            "porcentaje_incompletas": 42.86
+        }
+    ],
+    "novedades_encuestas": [
+        {
+            "id": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        },
+        {
+            "id": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        },
+        {
+            "id": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        },
+        {
+            "id": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        },
+        {
+            "id": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        },
+        {
+            "id": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        },
+        {
+            "id": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        },
+        {
+            "id": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        },
+        {
+            "id": 2,
+            "titulo_encuesta": "Encuesta control publicada piloto II",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        },
+        {
+            "id": 3,
+            "titulo_encuesta": "Encuesta control publicada piloto III",
+            "estado": "piloto",
+            "actividad": "Creada Publicada Comentada"
+        }
+    ]
+}

@@ -70,9 +70,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //Imprimir Encuesta 
     Route::get('/encuestas/{encuestaId}/pdf', [InformeController::class, 'downloadSurveyPdf']);
     //dashboard
-    Route::get('/dashboard/contadores_encuestas', [DashboardController::class, 'conteoEncuestas']); //dashboard/{idFuncion}
-    Route::get('/dashboard/ratio_respuestas', [DashboardController::class, 'ratioRespuestas']);
-    Route::get('/dashboard/top_respondidas', [DashboardController::class, 'topRespondidas']);
+    // Route::get('/dashboard/contadores_encuestas', [DashboardController::class, 'conteoEncuestas']); //dashboard/{idFuncion}
+    // Route::get('/dashboard/ratio_respuestas', [DashboardController::class, 'ratioRespuestas']);
+    // Route::get('/dashboard/top_respondidas', [DashboardController::class, 'topRespondidas']);
+    Route::get('/dashboard/informes', [DashboardController::class, 'show']);
     Route::get('/dashboard/novedades_encuestas', [DashboardController::class, 'novedadesEncuestas']);
 });
 

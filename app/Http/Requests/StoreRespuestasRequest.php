@@ -29,11 +29,11 @@ class StoreRespuestasRequest extends FormRequest
     {
         return [
             'respuestas' => 'required|array',
-            'respuestas.*.pregunta_id' => 'required|integer|exists:preguntas,id',
-            'respuestas.*.puntuacion' => 'nullable|integer',
-            'respuestas.*.valor_numerico' => 'nullable|float',
-            'respuestas.*.entrada_texto' => 'nullable|string',
-            'respuestas.*.seleccion' => 'nullable|array',
+            'respuestas.0.*.pregunta_id' => 'required|integer|exists:preguntas,id',
+            'respuestas.0.*.puntuacion' => 'nullable|integer',
+            'respuestas.0.*.valor_numerico' => 'nullable|float',
+            'respuestas.0.*.entrada_texto' => 'nullable|string',
+            'respuestas.0.*.seleccion' => 'nullable',
             'correo' => 'nullable|email',
             'comentarios' => 'nullable|string'
         ];
@@ -43,7 +43,7 @@ class StoreRespuestasRequest extends FormRequest
     public function withValidator(Validator $validator)
     {
         $validator->after(function ($validator) {
-            $respuestas = $this->input('respuestas');
+            $respuestas = $this->input('respuestas')[0];
             $correo = $this->input('correo');
             $preguntaId = $respuestas[0]['pregunta_id'];
             $encuestaId = Pregunta::where('id', $preguntaId)->value('encuesta_id');

@@ -25,12 +25,12 @@ class RespuestaController extends Controller
     {
         try {
             DB::beginTransaction();
-            $encuesta = Encuesta::select('id','es_anonima')->where('id', $encuestaId)->first();
-            if(!$encuesta) {
+            $encuesta = Encuesta::select('id', 'es_anonima')->where('id', $encuestaId)->first();
+            if (!$encuesta) {
                 return response()->json(['message' => 'Encuesta no encontrada'], 404);
             }
             // Creación y almacenamiento de "encuestado"
-            if(!$encuesta->es_anonima) {
+            if (!$encuesta->es_anonima) {
                 if ($request->has('correo')) { //se puede mandar simplemente el id 
                     $encuestado = Encuestado::where('correo', $request->correo)->first();
                     if (!$encuestado) {
@@ -52,29 +52,56 @@ class RespuestaController extends Controller
                     $encuestado = Encuestado::create($encuestadoData);
                 }
             }
+
             // Guardado de las respuestas
-            foreach ($request->respuestas as $respuestaData) {
+            foreach ($request->respuestas[0] as $respuestaData) {
+                $indicesSeleccionados = null;
+                if (!is_null($respuestaData['seleccion']) && !empty($respuestaData['seleccion'])) {
+                    $opciones = Pregunta::where('id', $respuestaData['pregunta_id'])->pluck('seleccion')->first();
+                    if (is_array($respuestaData['seleccion'])) {
+                        // Si es un array, recorre cada opción seleccionada
+                        foreach ($respuestaData['seleccion'] as $seleccionada) {
+                            $indice = array_search($seleccionada, $opciones);
+                            if ($indice !== false) {
+                                $indicesSeleccionados[] = $indice;
+                            }
+                        }
+                    } elseif (is_string($respuestaData['seleccion'])) {
+                        // Si es una string (selección única), busca su índice directamente
+                        $indice = array_search($respuestaData['seleccion'], $opciones);
+                        if ($indice !== false) {
+                            $indicesSeleccionados[] = $indice;
+                        }
+                    }
+                }
                 $respuesta = new Respuesta([
                     'encuestado_id' => $encuestado->id,
                     'pregunta_id' => $respuestaData['pregunta_id'],
                     'puntuacion' => $respuestaData['puntuacion'] ?? null,
                     'entrada_texto' => $respuestaData['entrada_texto'] ?? null,
-                    'seleccion' => $respuestaData['seleccion'] ?? null,
+                    'seleccion' => $indicesSeleccionados ?? null,
                 ]);
-                // HACER ESTO MÁS EFICIENTE
-                //Obtener la pregunta para verificar si es obligatoria
-                // $pregunta = Pregunta::select('id', 'es_obligatoria')->find($respuestaData['pregunta_id']);
-                // if ($pregunta && $pregunta->es_obligatoria) {
-                //     // Validar que la respuesta no está vacía
-                //     if ($respuesta->esRespuestaVacia()) {
-                //         return response()->json(['error' => 'La pregunta' . $pregunta->id . 'es obligatoria y uno de sus campos debe ser no nulo.'], 422);
-                //     }
-                // }
                 $respuesta->save();
             }
+
+            // Completar con vacío las respuestas no recibidas 
+            $preguntasId = Pregunta::where('encuesta_id', $encuestaId)->pluck('id')->toArray();
+            $preguntaIdsRespondidas = collect($request->respuestas[0])->pluck('pregunta_id')->toArray();
+            $preguntasNoRespondidas = array_diff($preguntasId, $preguntaIdsRespondidas);
+            foreach ($preguntasNoRespondidas as $preguntaIdNoRespondida) {
+                $respuesta = new Respuesta([
+                    'encuestado_id' => $encuestado->id,
+                    'pregunta_id' => $preguntaIdNoRespondida,
+                    'puntuacion' => null,
+                    'entrada_texto' => null,
+                    'seleccion' => null,
+                ]);
+                $respuesta->save();
+            }
+            
             //Encuesta PILOTO
             if ($request->has('comentarios')) {
-                $feedBackData['comentarios'] = $request->comentarios; 
+                $feedBackData['comentarios'] = $request->comentarios;
 
                 //en el caso que la solicitud no tenga encuestaId, se la obtiene a partir de la pregunta_id:
                 // $preguntaId = $request->input('respuestas')[0]['pregunta_id'];

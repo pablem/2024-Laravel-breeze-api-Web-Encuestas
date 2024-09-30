@@ -432,8 +432,8 @@ class InformeController extends Controller
         });
         $numeroNoNulos = count($valoresNoNulos);
         $respuestasEnBlanco = $totalRespuestas - $numeroNoNulos;
-        $max = max($valoresNoNulos);
-        $min = min($valoresNoNulos);
+        $max = $valoresNoNulos && $valoresNoNulos > 1 ? max($valoresNoNulos) : 0;
+        $min = $valoresNoNulos && $valoresNoNulos > 1 ? min($valoresNoNulos) : 0;
 
         // Dividir el rango en 5 intervalos
         $intervalo = ($max - $min) / 5;

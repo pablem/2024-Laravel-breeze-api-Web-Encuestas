@@ -237,8 +237,8 @@ class EncuestaController extends Controller
         $entradas = Feedback_encuesta::select('id', 'comentarios as entrada_texto', 'created_at')
             ->where('encuesta_id', $encuestaId)
             ->whereNotNull('comentarios')
-            ->orderBy('created_at')
-            // ->limit(100)
+            ->orderBy('id', 'desc')
+            ->limit(100)
             ->get();
         $feedbacks = [
             'titulo' => $encuesta->titulo_encuesta,

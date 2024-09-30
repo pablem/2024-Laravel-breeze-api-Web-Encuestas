@@ -100,7 +100,7 @@ class RespuestaController extends Controller
             }
             
             //Encuesta PILOTO
-            if ($request->has('comentarios')) {
+            if ($request->has('comentarios') && !empty($request->input('comentarios'))) {
                 $feedBackData['comentarios'] = $request->comentarios;
 
                 //en el caso que la solicitud no tenga encuestaId, se la obtiene a partir de la pregunta_id:

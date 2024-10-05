@@ -436,8 +436,10 @@ class InformeController extends Controller
         $min = $valoresNoNulos && $valoresNoNulos > 1 ? min($valoresNoNulos) : 0;
 
         // Dividir el rango en 5 intervalos
-        $intervalo = ($max - $min) / 5;
-        $contadores = array_fill(0, 5, 0);
+        $n = count($valoresNoNulos) > 4 ? 5 : count($valoresNoNulos);
+        if (!$n) $n = 1; 
+        $intervalo = ($max - $min) / $n;
+        $contadores = array_fill(0, $n, 0);
 
         foreach ($valoresNoNulos as $valor) {
             if ($valor == $max) {
@@ -450,7 +452,7 @@ class InformeController extends Controller
 
         $resultadosFormateados = [];
 
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < $n; $i++) {
             $tramoInicio = $min + $i * $intervalo;
             $tramoFin = $min + ($i + 1) * $intervalo;
             $porcentaje = $totalRespuestas > 0 ? ($contadores[$i] / $totalRespuestas) * 100 : 0;
@@ -485,17 +487,15 @@ class InformeController extends Controller
     {
         $respuestasEnBlanco = 0;
         $totalRespuestas = 0;
-        $resultados = [
-            'Respuestas cortas (-15 palabras)' => 0,
-            'Respuestas medias (-50 palabras)' => 0,
-            'Respuestas largas (+50 palabras)' => 0
-        ];
+        $resultados = [];
 
         $respuestas = $pregunta->respuestas()->get(['entrada_texto']);
         if (!$respuestas || $respuestas->isEmpty()) {
             return [];
         }
         $arrayRespuestas = [];
+        $frecuenciaPalabras = [];
+        $frecuenciaExpresiones = [];
         foreach ($respuestas as $respuesta) {
             $totalRespuestas++;
             if (is_null($respuesta->entrada_texto) || empty($respuesta->entrada_texto)) {
@@ -504,10 +504,19 @@ class InformeController extends Controller
                 $numPalabras = str_word_count($respuesta->entrada_texto);
                 $arrayRespuestas[] = $numPalabras;
                 if ($numPalabras < 15) {
+                    if (!isset($resultados['Respuestas cortas (-15 palabras)'])) {
+                        $resultados['Respuestas cortas (-15 palabras)'] = 0;
+                    }
                     $resultados['Respuestas cortas (-15 palabras)']++;
                 } elseif ($numPalabras <= 50) {
+                    if (!isset($resultados['Respuestas medias (-50 palabras)'])) {
+                        $resultados['Respuestas medias (-50 palabras)'] = 0;
+                    }
                     $resultados['Respuestas medias (-50 palabras)']++;
                 } else {
+                    if (!isset($resultados['Respuestas largas (+50 palabras)'])) {
+                        $resultados['Respuestas largas (+50 palabras)'] = 0;
+                    }
                     $resultados['Respuestas largas (+50 palabras)']++;
                 }
 
@@ -521,7 +530,6 @@ class InformeController extends Controller
                 }
 
                 // Obtener expresiones de 2 o 3 palabras
-                $expresiones = [];
                 for ($i = 0; $i < count($palabras) - 1; $i++) {
                     if (isset($palabras[$i + 2])) {
                         $expresiones[] = $palabras[$i] . ' ' . $palabras[$i + 1] . ' ' . $palabras[$i + 2];

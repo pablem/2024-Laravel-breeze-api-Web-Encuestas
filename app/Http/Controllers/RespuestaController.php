@@ -54,7 +54,7 @@ class RespuestaController extends Controller
             }
 
             // Guardado de las respuestas
-            foreach ($request->respuestas[0] as $respuestaData) {
+            foreach ($request->respuestas as $respuestaData) {
                 $indicesSeleccionados = null;
                 if (!is_null($respuestaData['seleccion']) && !empty($respuestaData['seleccion'])) {
                     $opciones = Pregunta::where('id', $respuestaData['pregunta_id'])->pluck('seleccion')->first();
@@ -86,7 +86,7 @@ class RespuestaController extends Controller
 
             // Completar con vacío las respuestas no recibidas 
             $preguntasId = Pregunta::where('encuesta_id', $encuestaId)->pluck('id')->toArray();
-            $preguntaIdsRespondidas = collect($request->respuestas[0])->pluck('pregunta_id')->toArray();
+            $preguntaIdsRespondidas = collect($request->respuestas)->pluck('pregunta_id')->toArray();
             $preguntasNoRespondidas = array_diff($preguntasId, $preguntaIdsRespondidas);
             foreach ($preguntasNoRespondidas as $preguntaIdNoRespondida) {
                 $respuesta = new Respuesta([

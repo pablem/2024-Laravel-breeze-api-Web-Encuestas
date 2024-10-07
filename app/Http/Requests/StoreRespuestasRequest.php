@@ -31,7 +31,7 @@ class StoreRespuestasRequest extends FormRequest
             'respuestas' => 'nullable|array',
             'respuestas.*.pregunta_id' => 'required|integer|exists:preguntas,id',
             'respuestas.*.puntuacion' => 'nullable|integer',
-            'respuestas.*.valor_numerico' => 'nullable|float',
+            'respuestas.*.valor_numerico' => 'nullable',
             'respuestas.*.entrada_texto' => 'nullable|string',
             'respuestas.*.seleccion' => 'nullable',
             'correo' => 'nullable|email',

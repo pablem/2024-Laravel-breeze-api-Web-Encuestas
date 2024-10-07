@@ -74,31 +74,57 @@ class RespuestaController extends Controller
                         }
                     }
                 }
+
                 $respuesta = new Respuesta([
                     'encuestado_id' => $encuestado->id,
                     'pregunta_id' => $respuestaData['pregunta_id'],
                     'puntuacion' => $respuestaData['puntuacion'] ?? null,
                     'entrada_texto' => $respuestaData['entrada_texto'] ?? null,
                     'seleccion' => $indicesSeleccionados ?? null,
+                    'valor_numerico' => $respuestaData['valor_numerico'] ?? null,
                 ]);
+
+                // HACER ESTO MÁS EFICIENTE
+                // Obtener la pregunta para verificar si es obligatoria
+                $pregunta = Pregunta::select('id', 'id_orden', 'es_obligatoria')->find($respuestaData['pregunta_id']);
+                if ($pregunta && $pregunta->es_obligatoria) {
+                    // Validar que la respuesta no está vacía
+                    if ($respuesta->esRespuestaVacia()) {
+                        return response()->json(['message' => 'La pregunta' . $pregunta->id_orden . 'es obligatoria y uno de sus campos debe ser no nulo.'], 400);
+                    }
+                }
+
                 $respuesta->save();
             }
 
             // Completar con vacío las respuestas no recibidas 
-            $preguntasId = Pregunta::where('encuesta_id', $encuestaId)->pluck('id')->toArray();
-            $preguntaIdsRespondidas = collect($request->respuestas)->pluck('pregunta_id')->toArray();
-            $preguntasNoRespondidas = array_diff($preguntasId, $preguntaIdsRespondidas);
-            foreach ($preguntasNoRespondidas as $preguntaIdNoRespondida) {
+            $preguntas = Pregunta::where('encuesta_id', $encuestaId)
+                ->select('id', 'id_orden', 'es_obligatoria')
+                ->get();
+            $preguntaIdsRespondidas = collect($request->respuestas)
+                ->pluck('pregunta_id')
+                ->toArray();
+            $preguntasNoRespondidas = $preguntas->filter(function ($pregunta) use ($preguntaIdsRespondidas) {
+                return !in_array($pregunta->id, $preguntaIdsRespondidas);
+            });
+            foreach ($preguntasNoRespondidas as $preguntaNoRespondida) {
+                // Verificar si la pregunta es obligatoria
+                if ($preguntaNoRespondida->es_obligatoria) {
+                    return response()->json([
+                        'message' => 'La pregunta ' . $preguntaNoRespondida->id_orden . ' es obligatoria y uno de sus campos debe ser no nulo.'
+                    ], 400);
+                }
                 $respuesta = new Respuesta([
                     'encuestado_id' => $encuestado->id,
-                    'pregunta_id' => $preguntaIdNoRespondida,
+                    'pregunta_id' => $preguntaNoRespondida->id,
                     'puntuacion' => null,
                     'entrada_texto' => null,
                     'seleccion' => null,
+                    'valor_numerico' => null
                 ]);
                 $respuesta->save();
             }
-            
+
             //Encuesta PILOTO
             if ($request->has('comentarios') && !empty($request->input('comentarios'))) {
                 $feedBackData['comentarios'] = $request->comentarios;

@@ -57,7 +57,7 @@ class PreguntaController extends Controller
                         // 'id_orden' => 'required|integer',
                         'titulo_pregunta' => 'required',
                         'tipo_pregunta' => 'required|string',
-                        'rango_puntuacion' => 'nullable|array',
+                        'rango_puntuacion' => 'nullable|array|filled',
                         'seleccion' => 'nullable|array',
                         'es_obligatoria' => 'required|boolean',
                     ]);

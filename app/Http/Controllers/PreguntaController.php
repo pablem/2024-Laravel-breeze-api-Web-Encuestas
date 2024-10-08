@@ -22,13 +22,13 @@ class PreguntaController extends Controller
         try {
             // Iniciar una transacción ya que estamos trabajando con múltiples consultas
             DB::beginTransaction();
-
+            $contador = 1;
             foreach ($request->json() as $preguntaData) {
                 if (isset($preguntaData['id'])) {
                     // se asume que las preguntas nuevas no tendrán un campo 'id', si tiene, se actualizan
                     // se asume que algunos atributos pueden no estar, se filtrar los datos nulos
                     $validator = Validator::make($preguntaData, [
-                        'id_orden' => 'integer',
+                        // 'id_orden' => 'integer',
                         'titulo_pregunta' => 'string',
                         'tipo_pregunta' => 'string',
                         'rango_puntuacion' => 'array',
@@ -36,10 +36,11 @@ class PreguntaController extends Controller
                         'es_obligatoria' => 'boolean',
                     ]);
                     if ($validator->fails()) {
-                        return response()->json(['error' => $validator->errors()], 400);
+                        return response()->json(['message' => implode(', ', $validator->errors()->all())], 400);
                     }
                     $updateData = array_filter([
-                        'id_orden' => $preguntaData['id_orden'] ?? null,
+                        'id_orden' => $contador,
+                        // 'id_orden' => $preguntaData['id_orden'] ?? null,
                         'titulo_pregunta' => $preguntaData['titulo_pregunta'] ?? null,
                         'tipo_pregunta' => $preguntaData['tipo_pregunta'] ?? null,
                         'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
@@ -53,7 +54,7 @@ class PreguntaController extends Controller
 
                 } else {
                     $validator = Validator::make($preguntaData, [
-                        'id_orden' => 'required|integer',
+                        // 'id_orden' => 'required|integer',
                         'titulo_pregunta' => 'required|string',
                         'tipo_pregunta' => 'required|string',
                         'rango_puntuacion' => 'nullable|array',
@@ -61,11 +62,12 @@ class PreguntaController extends Controller
                         'es_obligatoria' => 'required|boolean',
                     ]);
                     if ($validator->fails()) {
-                        return response()->json(['error' => $validator->errors()], 400);
+                        return response()->json(['errors' => implode(', ', $validator->errors()->all())], 400);
                     }
                     $pregunta = new Pregunta([
                         'encuesta_id' => $encuestaId,
-                        'id_orden' => $preguntaData['id_orden'],
+                        'id_orden' => $contador,
+                        // 'id_orden' => $preguntaData['id_orden'],
                         'titulo_pregunta' => $preguntaData['titulo_pregunta'],
                         'tipo_pregunta' => $preguntaData['tipo_pregunta'],
                         'rango_puntuacion' => $preguntaData['rango_puntuacion'] ?? null,
@@ -74,7 +76,9 @@ class PreguntaController extends Controller
                     ]);
                     $pregunta->save();
                 }
+                $contador++;
             }
+
             //La fecha 'updated_at' de encuesta se actualiza con la modificación de alguna pregunta
             Encuesta::where('id', $encuestaId)->update(['id' => $encuestaId]);
             

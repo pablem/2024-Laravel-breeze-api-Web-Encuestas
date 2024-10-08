@@ -111,7 +111,7 @@ class RespuestaController extends Controller
                 // Verificar si la pregunta es obligatoria
                 if ($preguntaNoRespondida->es_obligatoria) {
                     return response()->json([
-                        'message' => 'La pregunta ' . $preguntaNoRespondida->id_orden . ' es obligatoria y uno de sus campos debe ser no nulo.'
+                        'message' => 'La pregunta ' . $preguntaNoRespondida->id_orden . ' es obligatoria, debe completarse.'
                     ], 400);
                 }
                 $respuesta = new Respuesta([

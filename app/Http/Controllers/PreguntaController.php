@@ -29,7 +29,7 @@ class PreguntaController extends Controller
                     // se asume que algunos atributos pueden no estar, se filtrar los datos nulos
                     $validator = Validator::make($preguntaData, [
                         // 'id_orden' => 'integer',
-                        'titulo_pregunta' => 'string',
+                        'titulo_pregunta' => 'required',
                         'tipo_pregunta' => 'string',
                         'rango_puntuacion' => 'array',
                         'seleccion' => 'array',
@@ -55,7 +55,7 @@ class PreguntaController extends Controller
                 } else {
                     $validator = Validator::make($preguntaData, [
                         // 'id_orden' => 'required|integer',
-                        'titulo_pregunta' => 'required|string',
+                        'titulo_pregunta' => 'required',
                         'tipo_pregunta' => 'required|string',
                         'rango_puntuacion' => 'nullable|array',
                         'seleccion' => 'nullable|array',

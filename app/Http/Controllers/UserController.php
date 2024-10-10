@@ -123,7 +123,7 @@ class UserController extends Controller
             }
             // verifica admin para cambiar el rol
             $rol = Auth::user()->role->value;
-            if ($request->filled('role') && ($rol === UserRole::Super->value || $rol === UserRole::Administrador->value)) {
+            if ($request->filled('role') && $usuario->role !== UserRole::Super && ($rol === UserRole::Super->value || $rol === UserRole::Administrador->value)) {
                 $usuario->role = $request->input('role');
             } 
             $usuario->save();

@@ -270,7 +270,7 @@ class InformeController extends Controller
                 'fecha_informe' => now()->format('d-m-Y H:i:s'),
                 'dias_restantes' => $diasRestantes,
                 'numero_respuestas' => $numeroRespuestas,
-                // 'preguntas' => []
+                'preguntas' => []
             ];
 
             if ($numeroRespuestas < 1) {

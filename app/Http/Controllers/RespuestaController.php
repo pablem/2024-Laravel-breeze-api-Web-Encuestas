@@ -90,7 +90,7 @@ class RespuestaController extends Controller
                 if ($pregunta && $pregunta->es_obligatoria) {
                     // Validar que la respuesta no está vacía
                     if ($respuesta->esRespuestaVacia()) {
-                        return response()->json(['message' => 'La pregunta' . $pregunta->id_orden . 'es obligatoria y uno de sus campos debe ser no nulo.'], 400);
+                        return response()->json(['message' => 'La pregunta ' . $pregunta->id_orden . ' es obligatoria.'], 400);
                     }
                 }
 

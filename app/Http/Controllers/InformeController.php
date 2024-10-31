@@ -6,7 +6,6 @@ use App\Enums\TipoPregunta;
 use App\Models\Encuesta;
 use App\Models\Encuestado;
 use App\Models\Pregunta;
-use App\Models\Respuesta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
@@ -332,7 +331,7 @@ class InformeController extends Controller
             $frecCombinaciones = Freq::frequencies($arrayCombinaciones) ?? null;
             $combinacionMenosElegida = $frecCombinaciones ? array_keys($frecCombinaciones, min($frecCombinaciones))[0] : null;
             $combinacionMasElegida = $frecCombinaciones ? array_keys($frecCombinaciones, max($frecCombinaciones))[0] : null;
-            
+
             arsort($frecCombinaciones);
             $top5 = array_slice($frecCombinaciones, 0, 5, true);
             $otros = array_slice($frecCombinaciones, 5);
@@ -437,13 +436,13 @@ class InformeController extends Controller
 
         // Dividir el rango en 5 intervalos
         $n = count($valoresNoNulos) > 4 ? 5 : count($valoresNoNulos);
-        if (!$n) $n = 1; 
+        if (!$n) $n = 1;
         $intervalo = ($max - $min) / $n;
         $contadores = array_fill(0, $n, 0);
 
         foreach ($valoresNoNulos as $valor) {
             if ($valor == $max) {
-                $contadores[4]++;
+                $contadores[$n - 1]++;
             } else {
                 $index = floor(($valor - $min) / $intervalo);
                 $contadores[$index]++;
@@ -453,8 +452,8 @@ class InformeController extends Controller
         $resultadosFormateados = [];
 
         for ($i = 0; $i < $n; $i++) {
-            $tramoInicio = $min + $i * $intervalo;
-            $tramoFin = $min + ($i + 1) * $intervalo;
+            $tramoInicio = round($min + $i * $intervalo, 2);
+            $tramoFin = round($min + ($i + 1) * $intervalo, 2);
             $porcentaje = $totalRespuestas > 0 ? ($contadores[$i] / $totalRespuestas) * 100 : 0;
             $resultadosFormateados[] = [
                 'titulo_opcion' => '[' . $tramoInicio . ' - ' . $tramoFin . ')',
@@ -522,14 +521,15 @@ class InformeController extends Controller
 
                 // Extraer palabras 
                 $palabras = str_word_count($respuesta->entrada_texto, 1);
-                $palabrasLargas = array_filter($palabras, fn($palabra) => strlen($palabra) > 4);
+                $palabrasLargas = array_filter($palabras, fn($palabra) => strlen($palabra) > 3);
 
-                // Contar palabras de más de 4 caracteres
+                // Contar palabras de más de 3 caracteres
                 foreach ($palabrasLargas as $palabra) {
                     $frecuenciaPalabras[$palabra] = ($frecuenciaPalabras[$palabra] ?? 0) + 1;
                 }
 
                 // Obtener expresiones de 2 o 3 palabras
+                $expresiones = [];
                 for ($i = 0; $i < count($palabras) - 1; $i++) {
                     if (isset($palabras[$i + 2])) {
                         $expresiones[] = $palabras[$i] . ' ' . $palabras[$i + 1] . ' ' . $palabras[$i + 2];
@@ -548,13 +548,13 @@ class InformeController extends Controller
         $frecuenciaPalabras = array_filter($frecuenciaPalabras, fn($count) => $count > 1);
         arsort($frecuenciaPalabras);
         $palabrasMasUsadas = !empty($frecuenciaPalabras) ? array_slice($frecuenciaPalabras, 0, 6) : null;
-        if($palabrasMasUsadas) ksort($palabrasMasUsadas);
+        // if($palabrasMasUsadas) ksort($palabrasMasUsadas);
 
         // Obtener las expresiones más usadas
         $frecuenciaExpresiones = array_filter($frecuenciaExpresiones, fn($count) => $count > 1);
         arsort($frecuenciaExpresiones);
-        $expresionesMasUsadas = !empty($frecuenciaExpresiones) ? array_slice($frecuenciaExpresiones, 0,6) : null;
-        if($expresionesMasUsadas) ksort($expresionesMasUsadas);
+        $expresionesMasUsadas = !empty($frecuenciaExpresiones) ? array_slice($frecuenciaExpresiones, 0, 6) : [0];
+        // if($expresionesMasUsadas) ksort($expresionesMasUsadas);
 
         $resultadosFormateados = [];
         foreach ($resultados as $tipoRespuesta => $cantidad) {
@@ -602,7 +602,16 @@ class InformeController extends Controller
             $estadisticas['moda'] = Stat::mode($data);
             if (count($data) > 2) $estadisticas['cuartiles'] = Stat::quantiles($data, 4, 2); //Stat::quantiles( array $data, $n=4, $round=null )
             $estadisticas['desviacion_estandar'] = Stat::stdev($data, 2);
-            $estadisticas['frecuencia_por_intervalos'] = Freq::frequencyTable($data, 5);
+            // $estadisticas['frecuencia_por_intervalos'] = Freq::frequencyTable($data, 5);
+            $frecuencias = Freq::frequencies($data);
+            arsort($frecuencias);
+            $max_value = reset($frecuencias);
+            if ($max_value > 1) {
+                $estadisticas['frecuencia_por_intervalos'] = array_slice($frecuencias, 0, 6, true);
+            } else {
+                // Si el valor máximo es 1, no mostrar ningún valor
+                $estadisticas['frecuencia_por_intervalos'] = [0];
+            }
         }
         return $estadisticas;
     }

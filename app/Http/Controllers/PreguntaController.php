@@ -32,6 +32,7 @@ class PreguntaController extends Controller
                         'titulo_pregunta' => 'required',
                         'tipo_pregunta' => 'string',
                         'rango_puntuacion' => 'array',
+                        'rango_puntuacion.*' => 'integer|min:0',
                         'seleccion' => 'array',
                         'es_obligatoria' => 'boolean',
                     ]);
@@ -58,11 +59,12 @@ class PreguntaController extends Controller
                         'titulo_pregunta' => 'required',
                         'tipo_pregunta' => 'required|string',
                         'rango_puntuacion' => 'nullable|array',
+                        'rango_puntuacion.*' => 'integer|min:0',
                         'seleccion' => 'nullable|array',
                         'es_obligatoria' => 'required|boolean',
                     ]);
                     if ($validator->fails()) {
-                        return response()->json(['errors' => implode(', ', $validator->errors()->all())], 400);
+                        return response()->json(['message' => implode(', ', $validator->errors()->all())], 400);
                     }
                     $pregunta = new Pregunta([
                         'encuesta_id' => $encuestaId,

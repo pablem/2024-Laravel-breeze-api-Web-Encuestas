@@ -348,12 +348,12 @@ class InformeController extends Controller
                     'porcentaje' => $porcentaje[$key]
                 ];
             }
-
             $estadisticas = $combinacionMenosElegida
                 ? [
                     'mas_popular' => $combinacionMasElegida,
                     'menos_popular' => $combinacionMenosElegida,
-                    'frecuencia_combinaciones' => $top5
+                    'frecuencia_combinaciones' => $top5,
+                    'frecuencia_por_intervalos' =>  array_slice($frecuencia, 0, 6, true)
                 ]
                 : [];
 

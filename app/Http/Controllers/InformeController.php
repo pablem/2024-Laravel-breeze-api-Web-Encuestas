@@ -382,6 +382,9 @@ class InformeController extends Controller
             }
         }
         $estadisticas = $this->estadisticas($arrayRespuestas);
+
+        $estadisticas['cuartiles'] = null; //se anula el diagrama de cajas para respuestas raiting 
+
         $frecuencia = Freq::frequencies($arrayRespuestas);
         $porcentaje = Freq::relativeFrequencies($arrayRespuestas, 2);
 

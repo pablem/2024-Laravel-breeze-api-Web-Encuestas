@@ -88,6 +88,33 @@ class RespuestaSeeder extends Seeder
                 }
             }
         }
+
+        //RESPUESTAS SÓLO TEXTO
+
+        $preguntaId = Pregunta::where('encuesta_id', 5)
+            ->where('tipo_pregunta', 'text')
+            ->value('id');
+        $respuestasTexto = [
+            "Fue una experiencia muy enriquecedora y también muy útil para todos los participantes.",
+            "Considero que los temas fueron interesantes y variados, aunque faltó algo de profundidad en algunos temas.",
+            "Me gustaria que en las futuras capacitaciones se incluyan muchos más ejercicios prácticos y variados.",
+            "Las capacitaciones son esenciales para el desarrollo profesional y personal de los empleados.",
+            "Hubo ciertos temas que ya conocía bien, pero igual aprendí muchas cosas nuevas e interesantes.",
+            "Estoy muy satisfecho con la capacitación en general. ¡Espero que se repita muy pronto y con más temas!",
+            "Creo que la duración fue adecuada para los temas seleccionados, pero algunos temas podrían extenderse.",
+            "Me gustaría ver un enfoque mucho más técnico y específico en las próximas sesiones.",
+            "Excelente oportunidad para mejorar habilidades profesionales y personales de los asistentes.",
+            "Fue una capacitación muy productiva, aunque se podría mejorar en algunos aspectos del contenido."
+        ];
+        foreach ($encuestadosIds as $i => $id) {
+            Respuesta::create([
+                'encuestado_id' => $id,
+                'pregunta_id' => $preguntaId,
+                'entrada_texto' => $respuestasTexto[$i]
+            ]);
+        }
+
+        //RESPUESTAS PARA PROBAR EL CONTADOR DE EXPRESIONES REPETIDAS 
         $preguntaId = Pregunta::where('encuesta_id', 8)
             ->where('tipo_pregunta', 'text')
             ->value('id');

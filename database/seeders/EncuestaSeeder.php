@@ -51,7 +51,7 @@ class EncuestaSeeder extends Seeder
         Encuesta::create([
             'user_id' => 1,
             'titulo_encuesta' => 'Encuesta control anonima',
-            'descripcion' => fake()->paragraph(2),
+            'descripcion' => 'ESTA ENCUESTA SÓLO CONTIENE RESPUESTAS DEL TIPO TEXTO',
             'url' => 'http://localhost:5173/encuesta/publicada/encuesta-control-anonima-1',
             'estado' => EstadoEncuesta::Publicada->value,
             'fecha_publicacion' => now(),
@@ -68,6 +68,11 @@ class EncuestaSeeder extends Seeder
         } else {
             $this->command->info('No hay usuarios en la base de datos para asignar a las encuestas.');
         }
+        Encuesta::create([
+            'user_id' => 1,
+            'titulo_encuesta' => 'Ejemplo Encuesta Sobre Capacitaciones de la Empresa',
+            'descripcion' => 'En el marco de la semana Ciber Seguridad XIV realizamos cursos intensivos para aprender por qué tu contraseña no debería ser 1234'
+        ]);
 
     }
 }

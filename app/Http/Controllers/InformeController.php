@@ -495,6 +495,13 @@ class InformeController extends Controller
         if (!$respuestas || $respuestas->isEmpty()) {
             return [];
         }
+        // Lista de palabras sin importancia en español para el filtro
+        $palabrasIgnoradas = [
+            'el', 'la', 'los', 'las', 'a', 'antes', 'bajo', 'contra', 'de', 'desde', 'y', 
+            'pero', 'por', 'con', 'para', 'sin', 'sobre', 'en', 'entre', 'hasta', 'que', 'qué', 
+            'cuando', 'como', 'cual', 'cuales', 'cualesquiera', 'donde', 'muy', 'más', 
+            'menos', 'o', 'u', 'si', 'no', 'ni', 'se', 'un', 'una', 'unos', 'unas', 'fue', 'me'
+        ];
         $arrayRespuestas = [];
         $frecuenciaPalabras = [];
         $frecuenciaExpresiones = [];
@@ -524,11 +531,14 @@ class InformeController extends Controller
 
                 // Extraer palabras 
                 $palabras = str_word_count($respuesta->entrada_texto, 1);
-                $palabrasLargas = array_filter($palabras, fn($palabra) => strlen($palabra) > 3);
+                $palabrasLargas = array_filter($palabras, fn($palabra) => strlen($palabra) > 1);
 
                 // Contar palabras de más de 3 caracteres
                 foreach ($palabrasLargas as $palabra) {
-                    $frecuenciaPalabras[$palabra] = ($frecuenciaPalabras[$palabra] ?? 0) + 1;
+                    $palabraMin = strtolower($palabra);
+                    if (!in_array($palabraMin, $palabrasIgnoradas)) {
+                        $frecuenciaPalabras[$palabraMin] = ($frecuenciaPalabras[$palabraMin] ?? 0) + 1;
+                    }
                 }
 
                 // Obtener expresiones de 2 o 3 palabras
@@ -547,11 +557,10 @@ class InformeController extends Controller
         }
         $estadisticas = $this->estadisticas($arrayRespuestas, true);
 
-        // Obtener las palabras largas más usadas
+        // Obtener las palabras más usadas con frecuencia mayor a 1
         $frecuenciaPalabras = array_filter($frecuenciaPalabras, fn($count) => $count > 1);
         arsort($frecuenciaPalabras);
         $palabrasMasUsadas = !empty($frecuenciaPalabras) ? array_slice($frecuenciaPalabras, 0, 6) : null;
-        // if($palabrasMasUsadas) ksort($palabrasMasUsadas);
 
         // Obtener las expresiones más usadas
         $frecuenciaExpresiones = array_filter($frecuenciaExpresiones, fn($count) => $count > 1);

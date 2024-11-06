@@ -1,6 +1,0 @@
-CONTROL1 tiene 3 resultados 3 completos (todas las respuestas completadas)
-CONTROL2 tiene 2 resultados 2 incompletos (con una respuesta en null cada una)
-CONTROL3 tiene 1 resultado incompleto (dos respuestas en null)
-CONTROL4 no tiene resultados
-CONTROL5 tiene 2 resultados 1 completo y otro incompleto
-CONTROL6 tiene 2 resultados 2 incompletos: uno con una respuesta null y otro con todas en null
